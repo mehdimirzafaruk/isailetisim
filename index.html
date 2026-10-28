@@ -151,8 +151,8 @@ a{color:inherit}
 }
 .store:hover{border-color:rgba(38,176,222,.55);box-shadow:0 8px 22px -10px rgba(21,122,155,.35);transform:translateY(-1px)}
 .store:active{transform:scale(.99);background:var(--surface)}
-.badge{flex:none;width:44px;height:44px;border-radius:12px;overflow:hidden}
-.badge svg{width:44px;height:44px}
+.badge{flex:none;display:flex;align-items:center;justify-content:center;width:72px;height:44px;padding:6px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.badge img{display:block;width:100%;height:100%;object-fit:contain}
 .store-text{flex:1;min-width:0}
 .store-name{display:block;font-size:16px;font-weight:700;line-height:1.25}
 .store-fact{display:block;margin-top:2px;font-size:13px;color:var(--muted);line-height:1.35}
@@ -201,6 +201,32 @@ a{color:inherit}
 .social:active{transform:scale(.96)}
 .socials-section .section-head{text-align:center}
 
+/* ---------- Reviews ---------- */
+.reviews{
+  list-style:none;margin:0;padding:2px 0 6px;display:flex;gap:12px;
+  overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.reviews::-webkit-scrollbar{display:none}
+.review{
+  flex:0 0 85%;scroll-snap-align:start;display:flex;flex-direction:column;gap:10px;
+  padding:16px;background:#fff;border:1px solid var(--line);border-radius:var(--r-card);
+  box-shadow:0 1px 2px rgba(31,31,31,.04);
+}
+.stars{display:block;width:84px;height:16px;color:#F5A623}
+.review-text{
+  margin:0;font-size:15px;line-height:1.5;color:var(--text);
+  display:-webkit-box;-webkit-line-clamp:6;line-clamp:6;-webkit-box-orient:vertical;overflow:hidden;
+}
+.review-foot{margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:13px;line-height:1.35;color:var(--muted)}
+.review-name{font-weight:700;color:var(--text)}
+.review-who{flex-basis:100%}
+.review-date{white-space:nowrap}
+.review-src{padding:2px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:11.5px;font-weight:600;color:var(--muted)}
+.review-dots{display:flex;justify-content:center;gap:6px;margin-top:10px}
+.review-dots span{width:6px;height:6px;border-radius:999px;background:#C9D3D9;transition:width .2s ease,background-color .2s ease}
+.review-dots span.on{width:18px;background:var(--blue-dark)}
+
 /* ---------- WhatsApp ---------- */
 .wa{
   margin-top:24px;display:flex;align-items:center;justify-content:center;gap:10px;
@@ -240,6 +266,11 @@ a{color:inherit}
   .product-sub{font-size:12px}
   .product-price{font-size:15.5px;margin-bottom:8px;padding-top:6px}
   .btn-sm{min-height:40px;font-size:13.5px}
+  .reviews{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;overflow:visible;scroll-snap-type:none}
+  .review-dots{display:none}
+  .review{padding:14px;gap:8px}
+  .review-text{font-size:13.5px;line-height:1.45;-webkit-line-clamp:8;line-clamp:8}
+  .review-foot{font-size:12px}
 }
 
 @media (prefers-reduced-motion:reduce){
@@ -282,35 +313,35 @@ a{color:inherit}
 
       <!-- Trendyol -->
       <li><a class="store" data-t="trendyol" href="https://www.trendyol.com/magaza/yasomi-m-109844" target="_blank" rel="noopener">
-        <span class="badge" aria-hidden="true"><svg viewBox="0 0 44 44"><rect width="44" height="44" fill="#F27A1A"/><text x="22" y="30.5" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="23" font-weight="700" fill="#fff">T</text></svg></span>
+        <span class="badge" aria-hidden="true"><img src="assets/logo-trendyol.svg" width="58" height="30" alt="Trendyol" decoding="async"></span>
         <span class="store-text"><span class="store-name">Trendyol</span><span class="store-fact">308B takipçi · 9,1 satıcı puanı</span></span>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
       </a></li>
 
       <!-- Hepsiburada -->
       <li><a class="store" data-t="hepsiburada" href="https://www.hepsiburada.com/magaza/yasomi" target="_blank" rel="noopener">
-        <span class="badge" aria-hidden="true"><svg viewBox="0 0 44 44"><rect width="44" height="44" fill="#FF6000"/><text x="22" y="28.5" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="18" font-weight="700" fill="#fff" letter-spacing="-.5">hb</text></svg></span>
+        <span class="badge" aria-hidden="true"><img src="assets/logo-hepsiburada.svg" width="58" height="30" alt="Hepsiburada" decoding="async"></span>
         <span class="store-text"><span class="store-name">Hepsiburada</span><span class="store-fact">94B takipçi · 9,5 satıcı puanı</span></span>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
       </a></li>
 
       <!-- Amazon -->
       <li><a class="store" data-t="amazon" href="https://www.amazon.com.tr/stores/Yasomi/page/674593C8-59FC-4DE6-8D75-6BC5E7D6D909" target="_blank" rel="noopener">
-        <span class="badge" aria-hidden="true"><svg viewBox="0 0 44 44"><rect width="44" height="44" fill="#FF9900"/><text x="22" y="25" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="21" font-weight="700" fill="#1F1F1F">a</text><path d="M12.5 29.5c6 3.4 13 3.4 19 0" fill="none" stroke="#1F1F1F" stroke-width="2.2" stroke-linecap="round"/><path d="M28.6 27.9l3.2 1.4-1.1 3.2" fill="none" stroke="#1F1F1F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span class="store-text"><span class="store-name">Amazon</span><span class="store-fact">Yasomi Store · Amazon'dan gönderim</span></span>
+        <span class="badge" aria-hidden="true"><img src="assets/logo-amazon.svg" width="58" height="30" alt="Amazon" decoding="async"></span>
+        <span class="store-text"><span class="store-name">Amazon</span><span class="store-fact">Resmi Yasomi Store</span></span>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
       </a></li>
 
       <!-- Pazarama -->
       <li><a class="store" data-t="pazarama" href="https://www.pazarama.com/magaza/yasomi" target="_blank" rel="noopener">
-        <span class="badge" aria-hidden="true"><svg viewBox="0 0 44 44"><rect width="44" height="44" fill="#00A6E0"/><text x="22" y="30.5" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="23" font-weight="700" fill="#fff">P</text></svg></span>
+        <span class="badge" aria-hidden="true"><img src="assets/logo-pazarama.svg" width="58" height="30" alt="Pazarama" decoding="async"></span>
         <span class="store-text"><span class="store-name">Pazarama</span><span class="store-fact">Resmi Yasomi mağazası</span></span>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
       </a></li>
 
       <!-- Temu -->
       <li><a class="store" data-t="temu" href="https://www.temu.com/tr/search_result.html?search_key=yasomi" target="_blank" rel="noopener">
-        <span class="badge" aria-hidden="true"><svg viewBox="0 0 44 44"><rect width="44" height="44" fill="#FB7701"/><text x="22" y="26.5" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#fff" letter-spacing="-.2">temu</text></svg></span>
+        <span class="badge" aria-hidden="true"><img src="assets/logo-temu.svg" width="58" height="30" alt="Temu" decoding="async"></span>
         <span class="store-text"><span class="store-name">Temu</span><span class="store-fact">Yasomi ürünleri Temu'da</span></span>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
       </a></li>
@@ -387,13 +418,60 @@ a{color:inherit}
       <li><a class="social" data-t="x" href="https://x.com/Yasomiofficial" target="_blank" rel="noopener"><span class="sr-only">X (Twitter)</span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" transform="translate(3 3) scale(.75)" d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a></li>
       <li><a class="social" data-t="linkedin" href="https://www.linkedin.com/company/yasomi" target="_blank" rel="noopener"><span class="sr-only">LinkedIn</span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" transform="translate(1.6 1.4) scale(.86)" d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45Z"/></svg></a></li>
     </ul>
-
-    <!-- ===== 6. WhatsApp ===== -->
-    <a class="wa" data-t="whatsapp" href="https://wa.me/905441569272?text=Merhaba%2C%20Yasomi%20%C3%BCr%C3%BCnleri%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
-      <span>WhatsApp'tan sor</span>
-    </a>
   </section>
+
+  <!-- Gerçek yorumlar: data-review kartlarını düzenle -->
+  <!-- ===== 5b. Müşteri yorumları (Trendyol alıcı yorumları; schema.org Review işaretlemesi bilerek yok) ===== -->
+  <section class="section" aria-labelledby="h-reviews">
+    <div class="section-head">
+      <h2 id="h-reviews">Müşteriler ne diyor?</h2>
+      <p class="section-sub">Trendyol'daki gerçek alıcı yorumlarından. Satıcı puanı: Trendyol 9,1 · Hepsiburada 9,5</p>
+    </div>
+    <ul class="reviews">
+      <li class="review" data-review>
+        <svg class="stars" viewBox="0 0 120 24" role="img" aria-label="5 üzerinden 5 yıldız"><g fill="currentColor"><path transform="translate(0 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(24 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(48 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(72 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(96 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/></g></svg>
+        <blockquote class="review-text">Çocuklu bir aile olarak halılarda ve koltukta sürekli leke oluyordu, baş edemediğim için aldım. Sonuç beklediğimden çok iyi çıktı; en inatçı lekeleri bile buhar ve sıcak su sayesinde çıkardı, tertemiz oldu. Gönül rahatlığıyla tavsiye ederim.</blockquote>
+        <p class="review-foot"><span class="review-who"><span class="review-name">F. K.</span> · <span class="review-date">26 Ekim 2025</span></span><span class="review-src">Trendyol</span><span class="review-product">C11 Pro</span></p>
+      </li>
+
+      <li class="review" data-review>
+        <svg class="stars" viewBox="0 0 120 24" role="img" aria-label="5 üzerinden 5 yıldız"><g fill="currentColor"><path transform="translate(0 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(24 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(48 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(72 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(96 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/></g></svg>
+        <blockquote class="review-text">Hem yıkama hem buharlı temizlik yapabiliyorsunuz, sıcak su yıkaması da var. İki farklı makine almaya gerek kalmadan tek makineyle çözüyorsunuz. Koltuklarımı yıkadım, harika performans. 100 üzerinden 100.</blockquote>
+        <p class="review-foot"><span class="review-who"><span class="review-name">T. A.</span> · <span class="review-date">18 Mart 2026</span></span><span class="review-src">Trendyol</span><span class="review-product">C11 Pro</span></p>
+      </li>
+
+      <li class="review" data-review>
+        <svg class="stars" viewBox="0 0 120 24" role="img" aria-label="5 üzerinden 5 yıldız"><g fill="currentColor"><path transform="translate(0 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(24 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(48 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(72 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(96 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/></g></svg>
+        <blockquote class="review-text">Şüphelerim vardı ama bukle başlıklarını gelir gelmez denedim ve çok beğendim. Düz ve kabarık saçım çabuk ve güzel şekil aldı, köpük bile kullanmadım. Muadil markayı almama gerek yokmuş; hem uygun fiyatlı hem işlevi güzel.</blockquote>
+        <p class="review-foot"><span class="review-who"><span class="review-name">Ş. Z.</span> · <span class="review-date">4 Kasım 2025</span></span><span class="review-src">Trendyol</span><span class="review-product">Witero 9in1</span></p>
+      </li>
+
+      <li class="review" data-review>
+        <svg class="stars" viewBox="0 0 120 24" role="img" aria-label="5 üzerinden 5 yıldız"><g fill="currentColor"><path transform="translate(0 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(24 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(48 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(72 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(96 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/></g></svg>
+        <blockquote class="review-text">Dün sipariş vermiştim, bugün elime ulaştı. 5 dakikada saçlarıma güzel bir şekil verdim. Çok iyi bir ürün, çok mutlu oldum.</blockquote>
+        <p class="review-foot"><span class="review-who"><span class="review-name">R. I.</span> · <span class="review-date">28 Mayıs 2025</span></span><span class="review-src">Trendyol</span><span class="review-product">Witero 9in1</span></p>
+      </li>
+
+      <li class="review" data-review>
+        <svg class="stars" viewBox="0 0 120 24" role="img" aria-label="5 üzerinden 5 yıldız"><g fill="currentColor"><path transform="translate(0 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(24 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(48 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(72 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(96 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/></g></svg>
+        <blockquote class="review-text">Mükemmel bir emiş gücü var. Halı yıkama şampuanlı suyu 5 litrelik bidona hazırlayıp yanıma alıyorum. Kesinlikle tavsiye ederim.</blockquote>
+        <p class="review-foot"><span class="review-who"><span class="review-name">Şuayıp B.</span> · <span class="review-date">22 Temmuz 2025</span></span><span class="review-src">Trendyol</span><span class="review-product">Clean Force Pro</span></p>
+      </li>
+
+      <li class="review" data-review>
+        <svg class="stars" viewBox="0 0 120 24" role="img" aria-label="5 üzerinden 5 yıldız"><g fill="currentColor"><path transform="translate(0 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(24 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(48 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(72 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/><path transform="translate(96 0)" d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96z"/></g></svg>
+        <blockquote class="review-text">Makineden çok memnun kaldım, halılarımı yıkamaya vermekten kurtuldum. Tavsiye ederim.</blockquote>
+        <p class="review-foot"><span class="review-who"><span class="review-name">Nazife E.</span> · <span class="review-date">13 Şubat 2026</span></span><span class="review-src">Trendyol</span><span class="review-product">Clean Force Pro</span></p>
+      </li>
+    </ul>
+    <div class="review-dots" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  </section>
+
+  <!-- ===== 6. WhatsApp ===== -->
+  <a class="wa" data-t="whatsapp" href="https://wa.me/905441569272?text=Merhaba%2C%20Yasomi%20%C3%BCr%C3%BCnleri%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+    <span>WhatsApp'tan sor</span>
+  </a>
 
   <!-- ===== 7. Alt bilgi ===== -->
   <footer class="footer">
@@ -436,6 +514,20 @@ w.__ttqLoad=function(){ttq.load('D1AG6V3C77UC7904J7N0');ttq.page();};
     try{ if(typeof fbq==='function')fbq('trackCustom','BioClick',{target:t}); }catch(_){}
     try{ if(typeof ttq!=='undefined')ttq.track('ClickButton',{content_name:t}); }catch(_){}
   },{capture:true,passive:true});
+
+  // Yorum satırı (mobil): kaydırdıkça noktalardan aktif kartı göster
+  var row=document.querySelector('.reviews'),dots=document.querySelectorAll('.review-dots span');
+  if(row&&dots.length){
+    var cards=row.querySelectorAll('[data-review]'),raf=0;
+    function sync(){
+      raf=0;var i=0,max=row.scrollWidth-row.clientWidth;
+      if(max>0&&row.scrollLeft>=max-2)i=cards.length-1;
+      else{var best=1e9;for(var k=0;k<cards.length;k++){var d=Math.abs(cards[k].offsetLeft-row.offsetLeft-row.scrollLeft);if(d<best){best=d;i=k;}}}
+      for(var j=0;j<dots.length;j++)dots[j].classList.toggle('on',j===i);
+    }
+    row.addEventListener('scroll',function(){if(!raf)raf=requestAnimationFrame(sync);},{passive:true});
+    sync();
+  }
 })();
 </script>
 </body>
