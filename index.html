@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Yasomi | Resmi Mağazalar ve Sosyal Medya</title>
+<meta name="description" content="Yasomi'nin resmi mağazaları tek sayfada: yasomi.com.tr, Trendyol, Hepsiburada, Amazon, Pazarama ve Temu. Çok satanlar ve sosyal medya hesapları.">
+<link rel="canonical" href="https://isailetisim.com/">
+<meta name="theme-color" content="#26B0DE">
+<meta name="format-detection" content="telephone=no">
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:site_name" content="Yasomi">
+<meta property="og:url" content="https://isailetisim.com/">
+<meta property="og:title" content="Yasomi | Resmi Mağazalar ve Sosyal Medya">
+<meta property="og:description" content="Resmi mağaza, Trendyol, Hepsiburada, Amazon, Pazarama ve Temu. Yasomi'yi nereden alacağın tek sayfada.">
+<meta property="og:image" content="https://isailetisim.com/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Yasomi logosu ve Evini kolaylaştıran teknoloji yazısı">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@Yasomiofficial">
+<meta name="twitter:title" content="Yasomi | Resmi Mağazalar ve Sosyal Medya">
+<meta name="twitter:description" content="Resmi mağaza, Trendyol, Hepsiburada, Amazon, Pazarama ve Temu. Yasomi'yi nereden alacağın tek sayfada.">
+<meta name="twitter:image" content="https://isailetisim.com/assets/og.png">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
+<link rel="preload" as="image" href="assets/yasomi-logo-720.png" imagesrcset="assets/yasomi-logo-360.png 360w, assets/yasomi-logo-720.png 720w" imagesizes="(min-width:720px) 200px, 180px" fetchpriority="high">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;display=swap"></noscript>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Yasomi",
+  "url": "https://www.yasomi.com.tr",
+  "logo": "https://isailetisim.com/assets/yasomi-logo-720.png",
+  "sameAs": [
+    "https://www.instagram.com/yasomievaletleri/",
+    "https://www.tiktok.com/@yasomievaletleri",
+    "https://www.youtube.com/@yasomievaletleri",
+    "https://www.facebook.com/yasomievaletleri",
+    "https://x.com/Yasomiofficial",
+    "https://www.linkedin.com/company/yasomi"
+  ]
+}
+</script>
+
+<style>
+/* Montserrat yüklenene kadar metrikleri eşlenmiş yedek font: yazı yer değiştirmesin */
+@font-face{font-family:"Montserrat Fallback";src:local("Arial"),local("Helvetica");size-adjust:112.8%;ascent-override:85.8%;descent-override:22.3%;line-gap-override:0%}
+
+:root{
+  --blue:#26B0DE;
+  --blue-dark:#157A9B;
+  --blue-darker:#11677F;
+  --text:#1F1F1F;
+  --muted:#5F6B73;
+  --bg:#FFFFFF;
+  --surface:#F6F8F9;
+  --line:#E3E8EB;
+  --wa:#25D366;
+  --r-card:16px;
+  --shadow-cta:0 8px 20px -6px rgba(21,122,155,.55),0 2px 4px rgba(21,122,155,.18);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{
+  margin:0;min-height:100vh;
+  font-family:Montserrat,"Montserrat Fallback",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:16px;line-height:1.5;font-weight:400;color:var(--text);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  -webkit-tap-highlight-color:transparent;
+}
+/* Yumuşak marka arka planı: beyazdan çok hafif mavi tona, iki geniş leke */
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(520px 420px at 92% 6%,rgba(38,176,222,.16),transparent 70%),
+    radial-gradient(560px 460px at 0% 78%,rgba(38,176,222,.11),transparent 70%),
+    linear-gradient(180deg,#FFFFFF 0%,#FFFFFF 35%,#EEF8FC 100%);
+}
+img,svg{display:block}
+a{color:inherit}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+
+.page{
+  width:100%;max-width:540px;margin:0 auto;
+  padding:32px 16px calc(32px + env(safe-area-inset-bottom));
+}
+
+/* ---------- Header ---------- */
+.header{text-align:center}
+.logo{width:180px;height:auto;margin:0 auto}
+.tagline{margin:14px 0 0;font-size:15px;font-weight:600;color:var(--muted);letter-spacing:.01em}
+.chips{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.chip{
+  display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;
+  font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;
+  background:rgba(246,248,249,.9);border:1px solid var(--line);border-radius:999px;
+}
+.chip svg{width:14px;height:14px;flex:none;color:var(--blue-dark)}
+
+/* ---------- Primary CTA ---------- */
+.cta-block{margin-top:24px;text-align:center}
+.cta{
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;min-height:56px;padding:0 20px;white-space:nowrap;
+  background:var(--blue-dark);color:#fff;text-decoration:none;
+  font-size:clamp(15px,4.3vw,16.5px);font-weight:700;letter-spacing:.005em;
+  border-radius:999px;box-shadow:var(--shadow-cta);
+  transition:transform .18s ease,box-shadow .18s ease,background-color .18s ease;
+}
+.cta svg{width:20px;height:20px;flex:none}
+.cta .arrow{transition:transform .18s ease}
+.cta::after{
+  content:"";position:absolute;top:0;bottom:0;left:-40%;width:30%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);
+  transform:skewX(-18deg);animation:sheen 5.5s ease-in-out 1.2s infinite;
+}
+@keyframes sheen{0%{left:-40%}22%,100%{left:130%}}
+.cta:hover{background:var(--blue-darker);transform:translateY(-2px);box-shadow:0 14px 28px -8px rgba(21,122,155,.6),0 3px 6px rgba(21,122,155,.2)}
+.cta:hover .arrow{transform:translateX(3px)}
+.cta:active{transform:translateY(1px) scale(.99);box-shadow:0 4px 10px -4px rgba(21,122,155,.5)}
+.cta-note{margin:10px 0 0;font-size:13px;color:var(--muted)}
+.cta-note strong{font-weight:600;color:var(--text)}
+
+/* ---------- Sections ---------- */
+.section{margin-top:40px}
+.section-head{margin-bottom:16px}
+.section h2{margin:0;font-size:19px;line-height:1.3;font-weight:700;letter-spacing:-.005em}
+.section-sub{margin:4px 0 0;font-size:14px;color:var(--muted)}
+
+/* ---------- Marketplaces ---------- */
+.stores{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.store{
+  display:flex;align-items:center;gap:14px;min-height:70px;padding:12px 14px 12px 12px;
+  background:#fff;border:1px solid var(--line);border-radius:var(--r-card);
+  text-decoration:none;color:var(--text);
+  box-shadow:0 1px 2px rgba(31,31,31,.04);
+  transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.store:hover{border-color:rgba(38,176,222,.55);box-shadow:0 8px 22px -10px rgba(21,122,155,.35);transform:translateY(-1px)}
+.store:active{transform:scale(.99);background:var(--surface)}
+.badge{flex:none;width:44px;height:44px;border-radius:12px;overflow:hidden}
+.badge svg{width:44px;height:44px}
+.store-text{flex:1;min-width:0}
+.store-name{display:block;font-size:16px;font-weight:700;line-height:1.25}
+.store-fact{display:block;margin-top:2px;font-size:13px;color:var(--muted);line-height:1.35}
+.chev{flex:none;width:20px;height:20px;color:#9AA6AE;transition:transform .18s ease,color .18s ease}
+.store:hover .chev{transform:translateX(3px);color:var(--blue-dark)}
+
+/* ---------- Best sellers ---------- */
+.products{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.product{
+  display:flex;flex-direction:column;height:100%;padding:8px 8px 10px;
+  background:#fff;border:1px solid var(--line);border-radius:var(--r-card);
+  text-decoration:none;color:var(--text);
+  transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.product:hover{border-color:rgba(38,176,222,.55);box-shadow:0 10px 24px -12px rgba(21,122,155,.4);transform:translateY(-2px)}
+.product:active{transform:scale(.99)}
+.product-img{aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:#fff}
+.product-img img{width:100%;height:100%;object-fit:contain}
+.product-body{display:flex;flex-direction:column;flex:1;padding:10px 4px 0}
+.product-name{
+  margin:0;font-size:15px;font-weight:700;line-height:1.3;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.product-sub{
+  margin:2px 0 0;font-size:12.5px;line-height:1.35;color:var(--muted);min-height:2.7em;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.product-price{margin:auto 0 10px;padding-top:8px;font-size:17px;font-weight:700;letter-spacing:-.01em}
+.btn-sm{
+  display:flex;align-items:center;justify-content:center;
+  min-height:42px;border-radius:999px;background:var(--blue-dark);color:#fff;
+  font-size:14px;font-weight:600;transition:background-color .18s ease;
+}
+.product:hover .btn-sm{background:var(--blue-darker)}
+
+/* ---------- Socials ---------- */
+.socials{list-style:none;margin:0;padding:0;display:flex;justify-content:center;flex-wrap:wrap;gap:clamp(6px,2.4vw,12px)}
+.social{
+  display:flex;align-items:center;justify-content:center;
+  width:clamp(44px,12.6vw,52px);height:clamp(44px,12.6vw,52px);border-radius:50%;
+  background:var(--surface);border:1px solid var(--line);color:var(--text);
+  transition:background-color .18s ease,color .18s ease,border-color .18s ease,transform .18s ease;
+}
+.social svg{width:22px;height:22px}
+.social:hover{background:var(--blue-dark);border-color:var(--blue-dark);color:#fff;transform:translateY(-2px)}
+.social:active{transform:scale(.96)}
+.socials-section .section-head{text-align:center}
+
+/* ---------- WhatsApp ---------- */
+.wa{
+  margin-top:24px;display:flex;align-items:center;justify-content:center;gap:10px;
+  min-height:52px;padding:0 20px;border-radius:999px;
+  background:#fff;border:1.5px solid var(--wa);color:var(--text);text-decoration:none;
+  font-size:15.5px;font-weight:600;
+  transition:background-color .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.wa svg{width:22px;height:22px;color:var(--wa);flex:none}
+.wa:hover{background:#F1FCF5;transform:translateY(-1px);box-shadow:0 8px 20px -12px rgba(37,211,102,.7)}
+.wa:active{transform:scale(.99)}
+
+/* ---------- Footer ---------- */
+.footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);text-align:center;font-size:12.5px;color:var(--muted)}
+.footer p{margin:0}
+.footer a{display:inline-block;margin-top:4px;padding:6px 8px;color:var(--muted);font-weight:600;text-decoration:none;border-radius:8px}
+.footer a:hover{color:var(--blue-dark);text-decoration:underline}
+
+/* ---------- Tablet / desktop ---------- */
+@media (min-width:720px){
+  body::before{
+    background:
+      radial-gradient(680px 560px at 88% 4%,rgba(38,176,222,.20),transparent 70%),
+      radial-gradient(720px 600px at 6% 92%,rgba(38,176,222,.15),transparent 70%),
+      linear-gradient(160deg,#FFFFFF 0%,#F7FCFE 45%,#E8F6FB 100%);
+  }
+  .page{
+    max-width:640px;margin:48px auto;padding:44px 40px 32px;
+    background:rgba(255,255,255,.92);border:1px solid rgba(227,232,235,.9);border-radius:28px;
+    box-shadow:0 30px 80px -40px rgba(21,122,155,.35),0 2px 6px rgba(31,31,31,.03);
+  }
+  .logo{width:200px}
+  .products{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+  .product{padding:6px 6px 8px}
+  .product-body{padding:8px 4px 0}
+  .product-name{font-size:14px}
+  .product-sub{font-size:12px}
+  .product-price{font-size:15.5px;margin-bottom:8px;padding-top:6px}
+  .btn-sm{min-height:40px;font-size:13.5px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<main class="page">
+
+  <!-- ===== 1. Üst kısım: logo, slogan, güven rozetleri ===== -->
+  <header class="header">
+    <h1 class="sr-only">Yasomi resmi mağazaları ve sosyal medya hesapları</h1>
+    <img class="logo" src="assets/yasomi-logo-720.png" srcset="assets/yasomi-logo-360.png 360w, assets/yasomi-logo-720.png 720w" sizes="(min-width:720px) 200px, 180px" width="720" height="143" alt="Yasomi" fetchpriority="high" decoding="async">
+    <p class="tagline">Evini kolaylaştıran teknoloji</p>
+    <ul class="chips" aria-label="Neden Yasomi">
+      <li class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.4-3.1 8-7.5 9.5-4.4-1.5-7.5-5.1-7.5-9.5V6L12 3z"/><path d="M8.8 12.2l2.2 2.2 4.3-4.5"/></svg>Türkiye garantili</li>
+      <li class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.5h11v9.5h-11z"/><path d="M13.5 9.5h4.2l3.3 3.4V16h-7.5"/><circle cx="6.5" cy="17.5" r="1.8" fill="#fff"/><circle cx="17" cy="17.5" r="1.8" fill="#fff"/></svg>Ücretsiz kargo</li>
+      <li class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-.8A4.7 4.7 0 0 1 7.2 14.5h3.6a4.7 4.7 0 0 1 4.7 4.7v.8"/><path d="M15.5 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.7a4.7 4.7 0 0 1 3 4.4v.9"/></svg>300B+ takipçi</li>
+    </ul>
+  </header>
+
+  <!-- ===== 2. Ana buton: resmi mağaza ===== -->
+  <div class="cta-block">
+    <a class="cta" data-t="site" href="https://www.yasomi.com.tr/?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.1A2 2 0 0 1 15.8 21H8.2a2 2 0 0 1-2-1.9L5 8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg>
+      <span>Resmi mağazadan satın al</span>
+      <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+    <p class="cta-note"><strong>yasomi.com.tr</strong> · siteye özel fiyatlar</p>
+  </div>
+
+  <!-- ===== 3. Pazaryerleri ===== -->
+  <section class="section" aria-labelledby="h-stores">
+    <div class="section-head">
+      <h2 id="h-stores">Nereden almak istersin?</h2>
+      <p class="section-sub">Hangi uygulamayı kullanıyorsan oradan al, hepsi resmi Yasomi mağazası.</p>
+    </div>
+    <ul class="stores">
+
+      <!-- Trendyol -->
+      <li><a class="store" data-t="trendyol" href="https://www.trendyol.com/magaza/yasomi-m-109844" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true"><svg viewBox="0 0 44 44"><rect width="44" height="44" fill="#F27A1A"/><text x="22" y="30.5" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="23" font-weight="700" fill="#fff">T</text></svg></span>
+        <span class="store-text"><span class="store-name">Trendyol</span><span class="store-fact">308B takipçi · 9,1 satıcı puanı</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a></li>
+
+      <!-- Hepsiburada -->
+      <li><a class="store" data-t="hepsiburada" href="https://www.hepsiburada.com/magaza/yasomi" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true"><svg viewBox="0 0 44 44"><rect width="44" height="44" fill="#FF6000"/><text x="22" y="28.5" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="18" font-weight="700" fill="#fff" letter-spacing="-.5">hb</text></svg></span>
+        <span class="store-text"><span class="store-name">Hepsiburada</span><span class="store-fact">94B takipçi · 9,5 satıcı puanı</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a></li>
+
+      <!-- Amazon -->
+      <li><a class="store" data-t="amazon" href="https://www.amazon.com.tr/stores/Yasomi/page/674593C8-59FC-4DE6-8D75-6BC5E7D6D909" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true"><svg viewBox="0 0 44 44"><rect width="44" height="44" fill="#FF9900"/><text x="22" y="25" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="21" font-weight="700" fill="#1F1F1F">a</text><path d="M12.5 29.5c6 3.4 13 3.4 19 0" fill="none" stroke="#1F1F1F" stroke-width="2.2" stroke-linecap="round"/><path d="M28.6 27.9l3.2 1.4-1.1 3.2" fill="none" stroke="#1F1F1F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="store-text"><span class="store-name">Amazon</span><span class="store-fact">Yasomi Store · Amazon'dan gönderim</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a></li>
+
+      <!-- Pazarama -->
+      <li><a class="store" data-t="pazarama" href="https://www.pazarama.com/magaza/yasomi" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true"><svg viewBox="0 0 44 44"><rect width="44" height="44" fill="#00A6E0"/><text x="22" y="30.5" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="23" font-weight="700" fill="#fff">P</text></svg></span>
+        <span class="store-text"><span class="store-name">Pazarama</span><span class="store-fact">Resmi Yasomi mağazası</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a></li>
+
+      <!-- Temu -->
+      <li><a class="store" data-t="temu" href="https://www.temu.com/tr/search_result.html?search_key=yasomi" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true"><svg viewBox="0 0 44 44"><rect width="44" height="44" fill="#FB7701"/><text x="22" y="26.5" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#fff" letter-spacing="-.2">temu</text></svg></span>
+        <span class="store-text"><span class="store-name">Temu</span><span class="store-fact">Yasomi ürünleri Temu'da</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a></li>
+
+    </ul>
+  </section>
+
+  <!-- ===== 4. Çok satanlar ===== -->
+  <!-- Fiyatlar 28 Ekim 2026 itibarıyla; değişince burayı güncelle -->
+  <section class="section" aria-labelledby="h-products">
+    <div class="section-head">
+      <h2 id="h-products">Çok satanlar</h2>
+      <p class="section-sub">Bu ay en çok tercih edilen 4 ürün.</p>
+    </div>
+    <ul class="products">
+
+      <!-- ÜRÜN 1: C11 Pro | fiyat: 5.999 ₺ | link sonundaki ?utm_... kısmını silme -->
+      <li><a class="product" data-t="urun-c11-pro" href="https://www.yasomi.com.tr/yasomi-c11-pro-16kpa-1800w-sicak-su-spreyli-buharli-temizleyici-hali-ve-koltuk-yikama-makinesi?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">
+        <span class="product-img"><img src="assets/urun-c11-pro-400.webp" srcset="assets/urun-c11-pro-400.webp 400w, assets/urun-c11-pro-800.webp 800w" sizes="(min-width:720px) 140px, 50vw" width="400" height="400" alt="Yasomi C11 Pro halı ve koltuk yıkama makinesi" loading="lazy" decoding="async"></span>
+        <span class="product-body">
+          <span class="product-name">C11 Pro</span>
+          <span class="product-sub">Halı &amp; koltuk yıkama</span>
+          <span class="product-price">5.999&nbsp;₺</span>
+          <span class="btn-sm">İncele</span>
+        </span>
+      </a></li>
+
+      <!-- ÜRÜN 2: Clean Force Pro | fiyat: 9.999 ₺ -->
+      <li><a class="product" data-t="urun-clean-force-pro" href="https://www.yasomi.com.tr/yasomi-clean-force-pro-dikey-hali-koltuk-yikama-ve-leke-cikarma-makinesi-135?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">
+        <span class="product-img"><img src="assets/urun-clean-force-pro-400.webp" srcset="assets/urun-clean-force-pro-400.webp 400w, assets/urun-clean-force-pro-800.webp 800w" sizes="(min-width:720px) 140px, 50vw" width="400" height="400" alt="Yasomi Clean Force Pro dikey halı yıkama makinesi" loading="lazy" decoding="async"></span>
+        <span class="product-body">
+          <span class="product-name">Clean Force Pro</span>
+          <span class="product-sub">Dikey halı yıkama</span>
+          <span class="product-price">9.999&nbsp;₺</span>
+          <span class="btn-sm">İncele</span>
+        </span>
+      </a></li>
+
+      <!-- ÜRÜN 3: Witero 9in1 | fiyat: 7.599 ₺ -->
+      <li><a class="product" data-t="urun-witero" href="https://www.yasomi.com.tr/yasomi-witero-9in1-ultra-airwrap-multi-styler-sicak-soguk-hava-uflemeli-sac-sekillendirme-cihazi?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">
+        <span class="product-img"><img src="assets/urun-witero-400.webp" srcset="assets/urun-witero-400.webp 400w, assets/urun-witero-800.webp 800w" sizes="(min-width:720px) 140px, 50vw" width="400" height="400" alt="Yasomi Witero 9in1 saç şekillendirme cihazı" loading="lazy" decoding="async"></span>
+        <span class="product-body">
+          <span class="product-name">Witero 9in1</span>
+          <span class="product-sub">Saç şekillendirme</span>
+          <span class="product-price">7.599&nbsp;₺</span>
+          <span class="btn-sm">İncele</span>
+        </span>
+      </a></li>
+
+      <!-- ÜRÜN 4: Polish | fiyat: 11.999 ₺ -->
+      <li><a class="product" data-t="urun-polish" href="https://www.yasomi.com.tr/yasomi-polish-vacum-cleaner-islak-kuru-tam-koruma-buharli-temizleyici-137?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">
+        <span class="product-img"><img src="assets/urun-polish-400.webp" srcset="assets/urun-polish-400.webp 400w, assets/urun-polish-800.webp 800w" sizes="(min-width:720px) 140px, 50vw" width="400" height="400" alt="Yasomi Polish ıslak-kuru buharlı temizleyici" loading="lazy" decoding="async"></span>
+        <span class="product-body">
+          <span class="product-name">Polish</span>
+          <span class="product-sub">Islak-kuru buharlı temizleyici</span>
+          <span class="product-price">11.999&nbsp;₺</span>
+          <span class="btn-sm">İncele</span>
+        </span>
+      </a></li>
+
+    </ul>
+  </section>
+
+  <!-- ===== 5. Sosyal medya ===== -->
+  <section class="section socials-section" aria-labelledby="h-social">
+    <div class="section-head">
+      <h2 id="h-social">Bizi takip et</h2>
+    </div>
+    <ul class="socials">
+      <li><a class="social" data-t="instagram" href="https://www.instagram.com/yasomievaletleri/" target="_blank" rel="noopener"><span class="sr-only">Instagram</span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.4" cy="6.6" r="1.25" fill="currentColor"/></svg></a></li>
+      <li><a class="social" data-t="tiktok" href="https://www.tiktok.com/@yasomievaletleri" target="_blank" rel="noopener"><span class="sr-only">TikTok</span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" transform="translate(2.2 2) scale(.82)" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a></li>
+      <li><a class="social" data-t="youtube" href="https://www.youtube.com/@yasomievaletleri" target="_blank" rel="noopener"><span class="sr-only">YouTube</span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M21.6 7.2a2.5 2.5 0 0 0-1.77-1.77C18.27 5 12 5 12 5s-6.27 0-7.83.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.77 1.77C5.73 19 12 19 12 19s6.27 0 7.83-.43a2.5 2.5 0 0 0 1.77-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8ZM10 15V9l5.2 3L10 15Z"/></svg></a></li>
+      <li><a class="social" data-t="facebook" href="https://www.facebook.com/yasomievaletleri" target="_blank" rel="noopener"><span class="sr-only">Facebook</span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 21.5v-8h2.7l.4-3.1h-3.1V8.4c0-.9.25-1.5 1.55-1.5h1.65V4.1a22 22 0 0 0-2.4-.12c-2.4 0-4 1.45-4 4.1v2.32H7.6v3.1h2.7v8h3.2Z"/></svg></a></li>
+      <li><a class="social" data-t="x" href="https://x.com/Yasomiofficial" target="_blank" rel="noopener"><span class="sr-only">X (Twitter)</span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" transform="translate(3 3) scale(.75)" d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a></li>
+      <li><a class="social" data-t="linkedin" href="https://www.linkedin.com/company/yasomi" target="_blank" rel="noopener"><span class="sr-only">LinkedIn</span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" transform="translate(1.6 1.4) scale(.86)" d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45Z"/></svg></a></li>
+    </ul>
+
+    <!-- ===== 6. WhatsApp ===== -->
+    <a class="wa" data-t="whatsapp" href="https://wa.me/905441569272?text=Merhaba%2C%20Yasomi%20%C3%BCr%C3%BCnleri%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+      <span>WhatsApp'tan sor</span>
+    </a>
+  </section>
+
+  <!-- ===== 7. Alt bilgi ===== -->
+  <footer class="footer">
+    <p>© 2026 Yasomi · Tüm hakları saklıdır</p>
+    <a data-t="site-footer" href="https://www.yasomi.com.tr/?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">yasomi.com.tr</a>
+  </footer>
+
+</main>
+
+<!-- Meta Pixel (kuyruk hemen kurulur, betik sayfa yüklendikten sonra çekilir) -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];}(window,document);
+fbq('init','2245886525743919');
+fbq('track','PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=2245886525743919&amp;ev=PageView&amp;noscript=1"></noscript>
+
+<!-- TikTok Pixel (standart kuyruk; events.js sayfa yüklendikten sonra çekilir) -->
+<script>
+!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=d.createElement("script");n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=d.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
+w.__ttqLoad=function(){ttq.load('D1AG6V3C77UC7904J7N0');ttq.page();};
+}(window,document,'ttq');
+</script>
+
+<script>
+(function(){
+  // Pikselleri ilk çizimi geciktirmesin diye sayfa yüklendikten sonra yükle
+  function loadPixels(){
+    var s=document.createElement('script');s.async=true;s.src='https://connect.facebook.net/en_US/fbevents.js';
+    document.head.appendChild(s);
+    if(typeof window.__ttqLoad==='function')window.__ttqLoad();
+  }
+  if(document.readyState==='complete')loadPixels();else window.addEventListener('load',loadPixels);
+
+  // Dışarı giden her tıklamayı hedef adıyla ölç
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('a[data-t]');
+    if(!a)return;
+    var t=a.getAttribute('data-t');
+    try{ if(typeof fbq==='function')fbq('trackCustom','BioClick',{target:t}); }catch(_){}
+    try{ if(typeof ttq!=='undefined')ttq.track('ClickButton',{content_name:t}); }catch(_){}
+  },{capture:true,passive:true});
+})();
+</script>
+</body>
+</html>
