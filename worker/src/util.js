@@ -39,7 +39,7 @@ export function parseUA(ua) {
   else if (/Mobi|iPhone|iPod|Android|Windows Phone/i.test(ua)) device = 'mobile';
 
   let browser = 'Diğer';
-  if (/bot|crawl|spider|slurp|facebookexternalhit|facebookcatalog|WhatsApp|TelegramBot|Twitterbot|Slackbot|Discordbot|LinkedInBot|Pinterest|SkypeUriPreview|preview|HeadlessChrome|curl|wget|python-requests|Go-http-client/i.test(ua)) browser = 'Bot';
+  if (/bot|crawl|spider|slurp|facebookexternalhit|facebookcatalog|WhatsApp|TelegramBot|Twitterbot|Slackbot|Discordbot|LinkedInBot|Pinterest|SkypeUriPreview|preview|Headless|curl|wget|python-requests|Go-http-client|node-fetch|axios|okhttp|undici|Lighthouse|PTST|GTmetrix|Embedly|Iframely|ia_archiver|meta-externalagent/i.test(ua)) browser = 'Bot';
   else if (/Instagram/i.test(ua)) browser = 'Instagram in-app';
   else if (/BytedanceWebview|musical_ly|TikTok|trill_/i.test(ua)) browser = 'TikTok in-app';
   else if (/FBAN|FBAV|FB_IAB|FBIOS/i.test(ua)) browser = 'Facebook in-app';
@@ -76,7 +76,11 @@ export function refererDomain(ref) {
 }
 
 export const CODE_RE = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
-export const RESERVED_CODES = new Set(['admin', 'api', 'i', 'assets', 'index', 'robots', 'sitemap', 'favicon', 'cname', 'static', 'worker']);
+/** Bio'ya yapıştırılan kanal kısa linkleri: /ig -> /?s=ig (sources.js etiketleri buradan okur) */
+export const CHANNELS = {
+  ig: 'instagram', tt: 'tiktok', fb: 'facebook', x: 'x', yt: 'youtube', ln: 'linkedin', wa: 'whatsapp', tg: 'telegram',
+};
+export const RESERVED_CODES = new Set(['admin', 'api', 'i', 'assets', 'index', 'robots', 'sitemap', 'favicon', 'cname', 'static', 'worker', ...Object.keys(CHANNELS)]);
 
 export function isValidCode(code) {
   return typeof code === 'string' && CODE_RE.test(code) && !RESERVED_CODES.has(code);

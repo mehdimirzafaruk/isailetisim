@@ -1,4 +1,4 @@
--- isailetisim influencer takibi: ilk şema
+-- isailetisim influencer takibi: güncel şema (migrations/0001 + 0002'nin sonucu; yeni kurulumda migrations kullan)
 CREATE TABLE IF NOT EXISTS influencers (
   id         INTEGER PRIMARY KEY,
   code       TEXT NOT NULL UNIQUE,
@@ -14,9 +14,9 @@ CREATE TABLE IF NOT EXISTS events (
   id       INTEGER PRIMARY KEY,
   ts       INTEGER NOT NULL,             -- unix ms
   day      TEXT NOT NULL,                -- YYYY-MM-DD, Europe/Istanbul
-  type     TEXT NOT NULL CHECK (type IN ('visit','click','purchase')),
+  type     TEXT NOT NULL CHECK (type IN ('visit','click','purchase','view')),
   code     TEXT,                         -- influencer kodu; ref'siz olaylarda NULL
-  target   TEXT,                         -- click: mağaza adı; visit: yönlendirilen hedef
+  target   TEXT,                         -- click: mağaza adı; visit: yönlendirilen hedef; view: kaynak (instagram, direkt, web:alan…)
   href     TEXT,
   device   TEXT,                         -- mobile / tablet / desktop
   browser  TEXT,                         -- Instagram in-app, TikTok in-app, Safari, Chrome...
@@ -35,6 +35,8 @@ CREATE INDEX IF NOT EXISTS idx_events_code_day ON events (code, day);
 CREATE INDEX IF NOT EXISTS idx_events_code_ts  ON events (code, ts);
 CREATE INDEX IF NOT EXISTS idx_events_type_day ON events (type, day);
 CREATE INDEX IF NOT EXISTS idx_events_order    ON events (order_id) WHERE order_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_events_type_target_day ON events (type, target, day);
+CREATE INDEX IF NOT EXISTS idx_events_ip_ts    ON events (ip_hash, ts);
 
 CREATE TABLE IF NOT EXISTS login_attempts (
   ip_hash TEXT NOT NULL,

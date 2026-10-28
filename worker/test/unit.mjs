@@ -4,6 +4,7 @@ import * as u from '../src/util.js';
 import { esc, html, fmtNum, fmtTRY, barChart, chartBlock } from '../src/html.js';
 import { createSessionCookie, verifySessionValue, safeEqual } from '../src/auth.js';
 import { buildLocation } from '../src/track.js';
+import { detectSource, sourceFromTag, sourceFromReferer, trafficLabel } from '../src/sources.js';
 
 let n = 0;
 const t = async (name, fn) => { await fn(); n++; };
@@ -19,6 +20,63 @@ await t('isValidCode', () => {
   assert.ok(!u.isValidCode('Ayse'));
   assert.ok(!u.isValidCode('admin'));
   assert.ok(!u.isValidCode('a'.repeat(41)));
+  for (const c of ['ig', 'tt', 'fb', 'x', 'yt', 'ln', 'wa', 'tg', 'api', 'assets', 'i']) assert.ok(!u.isValidCode(c), `${c} ayrılmış`);
+  assert.ok(u.isValidCode('igx') && u.isValidCode('xx'));
+});
+await t('sourceFromTag', () => {
+  assert.equal(sourceFromTag('ig'), 'instagram');
+  assert.equal(sourceFromTag('TT'), 'tiktok');
+  assert.equal(sourceFromTag('x'), 'x');
+  assert.equal(sourceFromTag('tg'), 'telegram');
+  assert.equal(sourceFromTag('Kasım Çekiliş!!'), 's:kasim-cekilis');
+  assert.equal(sourceFromTag('a'.repeat(30)), 's:' + 'a'.repeat(20));
+  assert.equal(sourceFromTag('<script>'), 's:script');
+  assert.equal(sourceFromTag('!!!'), null);
+  assert.equal(sourceFromTag(''), null);
+});
+await t('sourceFromReferer', () => {
+  const r = (x) => sourceFromReferer(x, 'isailetisim.com');
+  assert.equal(r('https://l.instagram.com/?u=x'), 'instagram');
+  assert.equal(r('https://www.instagram.com/yasomi'), 'instagram');
+  assert.equal(r('https://www.tiktok.com/@yasomi'), 'tiktok');
+  for (const h of ['facebook.com', 'l.facebook.com', 'lm.facebook.com', 'm.facebook.com']) assert.equal(r(`https://${h}/`), 'facebook');
+  for (const h of ['t.co', 'x.com', 'twitter.com']) assert.equal(r(`https://${h}/`), 'x');
+  for (const h of ['youtube.com', 'm.youtube.com', 'youtu.be']) assert.equal(r(`https://${h}/`), 'youtube');
+  for (const h of ['linkedin.com', 'lnkd.in']) assert.equal(r(`https://${h}/`), 'linkedin');
+  for (const h of ['google.com', 'www.google.com.tr', 'google.de']) assert.equal(r(`https://${h}/`), 'google');
+  for (const h of ['web.whatsapp.com', 'wa.me']) assert.equal(r(`https://${h}/`), 'whatsapp');
+  for (const h of ['t.me', 'telegram.org']) assert.equal(r(`https://${h}/`), 'telegram');
+  assert.equal(r('https://www.trendyol.com/x'), 'web:trendyol.com');
+  assert.equal(r('https://' + 'a'.repeat(60) + '.com/'), ('web:' + 'a'.repeat(60)).slice(0, 40));
+  assert.equal(r('https://notgoogle.com/'), 'web:notgoogle.com');
+  assert.equal(r('https://isailetisim.com/#x'), null, 'kendi alan adı yok sayılır');
+  assert.equal(r('https://www.isailetisim.com/'), null);
+  assert.equal(r('android-app://com.instagram.android/'), 'instagram');
+  assert.equal(r('nope'), null);
+  assert.equal(r(null), null);
+});
+await t('detectSource öncelik', () => {
+  const U = 'https://isailetisim.com/';
+  const d = (q, referer, browser) => detectSource({ url: U + q, referer, browser });
+  assert.deepEqual(d('?s=ig', 'https://l.facebook.com/', 'TikTok in-app'), { source: 'instagram', code: null });
+  assert.deepEqual(d('?s=kampanya&ref=ayse', null, null), { source: 's:kampanya', code: null });
+  assert.deepEqual(d('?ref=ayse-kaya', 'https://l.instagram.com/', 'Instagram in-app'), { source: 'influencer', code: 'ayse-kaya' });
+  assert.deepEqual(d('?ref=Bad--', 'https://l.facebook.com/', null), { source: 'facebook', code: null });
+  assert.deepEqual(d('', 'https://l.facebook.com/', 'Instagram in-app'), { source: 'facebook', code: null });
+  assert.deepEqual(d('', null, 'Instagram in-app'), { source: 'instagram', code: null });
+  assert.deepEqual(d('', null, 'TikTok in-app'), { source: 'tiktok', code: null });
+  assert.deepEqual(d('', null, 'Facebook in-app'), { source: 'facebook', code: null });
+  assert.deepEqual(d('', 'https://isailetisim.com/', 'Safari'), { source: 'direkt', code: null });
+  assert.deepEqual(d('', null, 'Chrome'), { source: 'direkt', code: null });
+  assert.deepEqual(detectSource({ url: U + '?ref=ayse', referer: null, browser: 'Instagram in-app', ignoreRef: true }), { source: 'instagram', code: null });
+});
+await t('trafficLabel', () => {
+  assert.equal(trafficLabel('instagram'), 'Instagram');
+  assert.equal(trafficLabel('influencer'), 'Influencer linkleri');
+  assert.equal(trafficLabel('web'), 'Diğer web');
+  assert.equal(trafficLabel('web:trendyol.com'), 'trendyol.com');
+  assert.equal(trafficLabel('s:kampanya'), 'Etiket: kampanya');
+  assert.equal(trafficLabel(null), 'Direkt');
 });
 await t('dayOf Istanbul', () => {
   assert.equal(u.dayOf(Date.parse('2026-10-28T20:59:59Z')), '2026-10-28');
@@ -36,6 +94,9 @@ await t('parseUA', () => {
   assert.equal(u.parseUA('Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) CriOS/120 Mobile').device, 'tablet');
   assert.equal(u.parseUA('facebookexternalhit/1.1').browser, 'Bot');
   assert.equal(u.parseUA('WhatsApp/2.23').browser, 'Bot');
+  assert.equal(u.parseUA('curl/8.7.1').browser, 'Bot');
+  assert.equal(u.parseUA('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120 Safari/537.36').browser, 'Bot');
+  assert.equal(u.parseUA('Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Mobile Safari/537.36 Chrome-Lighthouse').browser, 'Bot');
 });
 await t('parseAmount', () => {
   assert.equal(u.parseAmount('5.999'), 5999);

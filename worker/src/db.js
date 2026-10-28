@@ -32,11 +32,12 @@ export async function insertEvent(db, ev) {
  * Tekilleştirerek ekle: aynı (code, ip_hash) için `windowMs` içinde aynı türde (click'te aynı target) olay varsa eklemez.
  * Tek ifade: INSERT ... SELECT ... WHERE NOT EXISTS. Dönen: eklendiyse true.
  */
-export async function insertEventDedup(db, ev, windowMs) {
+export async function insertEventDedup(db, ev, windowMs, { byCode = true } = {}) {
   const extra = ev.type === 'click' ? ' AND target IS ?' : '';
+  const codeCond = byCode ? ' AND code IS ?' : '';
   const sql = `INSERT INTO events (${EV_COLS.join(',')}) SELECT ${EV_COLS.map(() => '?').join(',')}
-    WHERE NOT EXISTS (SELECT 1 FROM events WHERE type = ? AND code IS ? AND ip_hash = ? AND ts > ?${extra})`;
-  const binds = [...evValues(ev), ev.type, ev.code ?? null, ev.ip_hash, ev.ts - windowMs];
+    WHERE NOT EXISTS (SELECT 1 FROM events WHERE type = ?${codeCond} AND ip_hash = ? AND ts > ?${extra})`;
+  const binds = [...evValues(ev), ev.type, ...(byCode ? [ev.code ?? null] : []), ev.ip_hash, ev.ts - windowMs];
   if (ev.type === 'click') binds.push(ev.target ?? null);
   const r = await db.prepare(sql).bind(...binds).run();
   return (r.meta?.changes ?? 0) > 0;
@@ -105,7 +106,7 @@ const AGG = `
 /** Tüm influencer'lar + dönem toplamları */
 export async function influencerStats(db, now = Date.now()) {
   const { d7, d30 } = periodDays(now);
-  const r = await db.prepare(`SELECT i.*, ${AGG} FROM influencers i LEFT JOIN events e ON e.code = i.code
+  const r = await db.prepare(`SELECT i.*, ${AGG} FROM influencers i LEFT JOIN events e ON e.code = i.code AND e.type != 'view'
     GROUP BY i.id ORDER BY i.active DESC, i.created_at DESC`).bind(d7, d30).all();
   return r.results || [];
 }
@@ -122,7 +123,7 @@ export async function totals(db, now = Date.now()) {
 
 export async function codeTotals(db, code, now = Date.now()) {
   const { d7, d30 } = periodDays(now);
-  return db.prepare(`SELECT ${AGG} FROM events e WHERE e.code = ?3`).bind(d7, d30, code).first();
+  return db.prepare(`SELECT ${AGG} FROM events e WHERE e.code = ?3 AND e.type != 'view'`).bind(d7, d30, code).first();
 }
 
 /** Son `days` gün, sıfır günler dahil, en yeni önce */
@@ -154,13 +155,104 @@ export async function breakdowns(db, code) {
 
 export async function eventPage(db, code, page = 1, perPage = 100) {
   const [rows, cnt] = await db.batch([
-    db.prepare('SELECT * FROM events WHERE code = ? ORDER BY ts DESC, id DESC LIMIT ? OFFSET ?').bind(code, perPage, (page - 1) * perPage),
-    db.prepare('SELECT COUNT(*) AS n FROM events WHERE code = ?').bind(code),
+    db.prepare("SELECT * FROM events WHERE code = ? AND type != 'view' ORDER BY ts DESC, id DESC LIMIT ? OFFSET ?").bind(code, perPage, (page - 1) * perPage),
+    db.prepare("SELECT COUNT(*) AS n FROM events WHERE code = ? AND type != 'view'").bind(code),
   ]);
   return { rows: rows.results || [], total: cnt.results[0]?.n || 0 };
 }
 
 export async function allEvents(db, code) {
-  const r = await db.prepare('SELECT * FROM events WHERE code = ? ORDER BY ts DESC, id DESC').bind(code).all();
+  const r = await db.prepare("SELECT * FROM events WHERE code = ? AND type != 'view' ORDER BY ts DESC, id DESC").bind(code).all();
+  return r.results || [];
+}
+
+/** Influencer'ın bio sayfasına iniş görüntülemesi (view, ?ref=kod) */
+export async function codeViewCount(db, code, now = Date.now()) {
+  const r = await db.prepare("SELECT COUNT(*) AS n, COALESCE(SUM(day >= ?2), 0) AS n30 FROM events WHERE type = 'view' AND code = ?1")
+    .bind(code, daysAgo(29, now)).first();
+  return { n: r?.n || 0, n30: r?.n30 || 0 };
+}
+
+// ---------- bio sayfası ziyaretçileri (view) ----------
+// Tıklamanın kaynağı: aynı ip_hash'in tıklamadan önceki son 1 saatteki en yeni görüntülemesi.
+export const CLICK_ATTRIB_MS = 3600 * 1000;
+const NO_FROM = '0000-00-00';
+const GROUP = "CASE WHEN target LIKE 'web:%' THEN 'web' ELSE COALESCE(target, 'direkt') END";
+const CLICK_SRC = `(SELECT CASE WHEN x.target LIKE 'web:%' THEN 'web' ELSE COALESCE(x.target, 'direkt') END FROM events x
+  WHERE x.type = 'view' AND x.ip_hash = e.ip_hash AND x.ts <= e.ts AND x.ts > e.ts - ${CLICK_ATTRIB_MS} ORDER BY x.ts DESC LIMIT 1)`;
+
+/**
+ * Görüntüleme / tekil / tıklama toplamları. froms: { anahtar: 'YYYY-MM-DD' | null } (null = tüm zamanlar).
+ * Dönen: { anahtar: { v, u, c } }
+ */
+export async function viewKpis(db, froms) {
+  const keys = Object.keys(froms);
+  const binds = keys.map((k) => froms[k] || NO_FROM);
+  const cols = keys.map((k, i) => `COALESCE(SUM(type = 'view' AND day >= ?${i + 1}), 0) AS v_${i},
+    COUNT(DISTINCT CASE WHEN type = 'view' AND day >= ?${i + 1} THEN ip_hash END) AS u_${i},
+    COALESCE(SUM(type = 'click' AND day >= ?${i + 1}), 0) AS c_${i}`).join(',\n');
+  const r = await db.prepare(`SELECT ${cols} FROM events WHERE type IN ('view', 'click')`).bind(...binds).first();
+  const out = {};
+  keys.forEach((k, i) => { out[k] = { v: r?.[`v_${i}`] || 0, u: r?.[`u_${i}`] || 0, c: r?.[`c_${i}`] || 0 }; });
+  return out;
+}
+
+/** Kaynak kırılımı (web:* tek satır 'web'): [{ k, v, u, c }] görüntülemeye göre azalan */
+export async function sourceBreakdown(db, from) {
+  const r = await db.prepare(`SELECT k, SUM(v) AS v, SUM(u) AS u, SUM(c) AS c FROM (
+      SELECT ${GROUP} AS k, COUNT(*) AS v, COUNT(DISTINCT ip_hash) AS u, 0 AS c FROM events WHERE type = 'view' AND day >= ?1 GROUP BY k
+      UNION ALL
+      SELECT COALESCE(src, '?') AS k, 0, 0, COUNT(*) FROM (SELECT ${CLICK_SRC} AS src FROM events e WHERE e.type = 'click' AND e.day >= ?1) GROUP BY k
+    ) GROUP BY k ORDER BY v DESC, c DESC, k`).bind(from || NO_FROM).all();
+  return r.results || [];
+}
+
+/** Gün gün görüntüleme / tekil / tıklama; `days` gün, sıfır günler dahil, en yeni önce */
+export async function viewDaily(db, days, now = Date.now()) {
+  const from = daysAgo(days - 1, now);
+  const r = await db.prepare(`SELECT day, SUM(type = 'view') AS v, COUNT(DISTINCT CASE WHEN type = 'view' THEN ip_hash END) AS u,
+      SUM(type = 'click') AS c FROM events WHERE type IN ('view', 'click') AND day >= ? GROUP BY day`).bind(from).all();
+  const map = new Map((r.results || []).map((x) => [x.day, x]));
+  const out = [];
+  for (let i = 0; i < days; i++) {
+    const day = daysAgo(i, now);
+    const x = map.get(day);
+    out.push({ day, v: x?.v || 0, u: x?.u || 0, c: x?.c || 0, p: 0, r: 0 });
+  }
+  return out;
+}
+
+export async function firstViewDay(db) {
+  const r = await db.prepare("SELECT MIN(day) AS d FROM events WHERE type = 'view'").first();
+  return r?.d || null;
+}
+
+/** Cihaz, tarayıcı, konum (ilk 15), saat (İstanbul) ve diğer web siteleri kırılımları */
+export async function viewBreakdowns(db, from) {
+  const f = from || NO_FROM;
+  const W = "FROM events WHERE type = 'view' AND day >= ?";
+  const [devices, browsers, places, hours, webs] = await db.batch([
+    db.prepare(`SELECT COALESCE(device, '?') AS k, COUNT(*) AS n ${W} GROUP BY k ORDER BY n DESC`).bind(f),
+    db.prepare(`SELECT COALESCE(browser, '?') AS k, COUNT(*) AS n ${W} GROUP BY k ORDER BY n DESC`).bind(f),
+    db.prepare(`SELECT COALESCE(country, '?') AS country, city, COUNT(*) AS n ${W} GROUP BY country, city ORDER BY n DESC LIMIT 15`).bind(f),
+    db.prepare(`SELECT ((ts + 10800000) / 3600000) % 24 AS h, COUNT(*) AS n ${W} GROUP BY h`).bind(f),
+    db.prepare(`SELECT target AS k, COUNT(*) AS n ${W} AND target LIKE 'web:%' GROUP BY k ORDER BY n DESC LIMIT 15`).bind(f),
+  ]);
+  const hourArr = Array(24).fill(0);
+  for (const x of hours.results || []) hourArr[Number(x.h)] = x.n;
+  return { devices: devices.results, browsers: browsers.results, places: places.results, hours: hourArr, webs: webs.results };
+}
+
+export async function viewPage(db, from, page = 1, perPage = 100) {
+  const f = from || NO_FROM;
+  const [rows, cnt] = await db.batch([
+    db.prepare("SELECT * FROM events WHERE type = 'view' AND day >= ? ORDER BY ts DESC, id DESC LIMIT ? OFFSET ?").bind(f, perPage, (page - 1) * perPage),
+    db.prepare("SELECT COUNT(*) AS n FROM events WHERE type = 'view' AND day >= ?").bind(f),
+  ]);
+  return { rows: rows.results || [], total: cnt.results[0]?.n || 0 };
+}
+
+export async function allViews(db, from) {
+  const r = await db.prepare("SELECT * FROM events WHERE type = 'view' AND day >= ? ORDER BY ts DESC, id DESC").bind(from || NO_FROM).all();
   return r.results || [];
 }

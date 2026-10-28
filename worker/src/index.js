@@ -31,10 +31,22 @@ export default {
       // 3) Panel
       if (p === '/admin' || p.startsWith('/admin/')) return handleAdmin(request, env, ctx, url);
 
-      // 4) Önce statik dosya (run_worker_first = true olduğu için her istek buradan geçer)
+      // 4) Kanal kısa linkleri: /ig -> /?s=ig (bio'lara yapıştırılır)
+      const cm = p.match(/^\/([a-z]{1,2})\/?$/i);
+      if (cm && (request.method === 'GET' || request.method === 'HEAD')) {
+        const r = track.channelRedirect(cm[1].toLowerCase());
+        if (r) return r;
+      }
+
+      // 5) Önce statik dosya (run_worker_first = true olduğu için her istek buradan geçer)
       let assetRes = null;
       if (env.ASSETS) {
         assetRes = await env.ASSETS.fetch(request);
+        // Bio sayfası görüntülemesi: yanıt hemen döner, yazma arkada (waitUntil). 304 = tarayıcı önbelleğinden tekrar açılış.
+        if ((p === '/' || p === '/index.html') && request.method === 'GET' && (assetRes.status === 304
+          || (assetRes.status === 200 && (assetRes.headers.get('content-type') || '').includes('text/html')))) {
+          ctx.waitUntil(track.pageView(request, env).catch((e) => console.error('view insert', e)));
+        }
         if (assetRes.status !== 404) return assetRes;
       }
       // Statik dosya yoksa: kısa biçim /:code yalnız kod varsa ve aktifse
@@ -47,7 +59,7 @@ export default {
         }
       }
 
-      // 5) Gerçek 404 (assets'in kendi 404'ü)
+      // 6) Gerçek 404 (assets'in kendi 404'ü)
       if (assetRes) return assetRes;
       if (env.ASSETS) return env.ASSETS.fetch(request);
       return new Response('Bulunamadı', { status: 404 });

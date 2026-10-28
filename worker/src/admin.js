@@ -1,9 +1,10 @@
 // /admin paneli: sunucu tarafında üretilen Türkçe HTML.
 import * as db from './db.js';
 import { isLoggedIn, attemptLogin, clearSessionCookie, authConfigured } from './auth.js';
-import { html, raw, esc, page, layout, kpiRow, chartBlock, fmtNum, fmtTRY, pct, PLATFORMS, SOURCE_LABELS, DEVICE_LABELS, TYPE_LABELS } from './html.js';
-import { isValidCode, slugify, normalizeTarget, parseAmount, clip, dayOf, daysAgo, fmtDateTime, fmtDay, noonOfDay, RESERVED_CODES } from './util.js';
-import { PURCHASE_SOURCES } from './track.js';
+import { html, raw, esc, page, layout, kpiRow, chartBlock, viewKpiRow, hourChart, fmtNum, fmtTRY, pct, PLATFORMS, SOURCE_LABELS, DEVICE_LABELS, TYPE_LABELS } from './html.js';
+import { isValidCode, slugify, normalizeTarget, parseAmount, clip, dayOf, daysAgo, fmtDateTime, fmtDay, noonOfDay, parseCookies, RESERVED_CODES, CHANNELS, DAY_MS } from './util.js';
+import { PURCHASE_SOURCES, NOVIEW_COOKIE } from './track.js';
+import { trafficLabel } from './sources.js';
 import { ticimaxSnippets } from './snippets.js';
 
 const PER_PAGE = 100;
@@ -37,7 +38,10 @@ export async function handleAdmin(request, env, ctx, url) {
 
   if (path === '/admin' && method === 'GET') return overview(env);
   if (path === '/admin/new') return method === 'POST' ? createLink(request, env) : newLinkPage(env, {});
-  if (path === '/admin/settings' && method === 'GET') return settingsPage(env);
+  if (path === '/admin/settings' && method === 'GET') return settingsPage(request, env, url);
+  if (path === '/admin/settings/noview' && method === 'POST') return setNoView(request);
+  if (path === '/admin/ziyaretciler' && method === 'GET') return visitorsPage(env, url);
+  if (path === '/admin/ziyaretciler/export.csv' && method === 'GET') return exportViewsCsv(env, url);
 
   const m = path.match(/^\/admin\/i\/([a-z0-9-]{1,40})(\/.*)?$/);
   if (m) {
@@ -88,9 +92,28 @@ async function login(request, env) {
   return loginPage({ next, error: 'Şifre yanlış.' }, 401);
 }
 
+// ---------------------------------------------------------------- bio sayfası ziyaretçileri: ortak parçalar
+const OVERVIEW_PERIODS = [{ key: 'd30', label: '30 gün' }, { key: 'today', label: 'Bugün' }, { key: 'd7', label: '7 gün' }, { key: 'all', label: 'Tümü' }];
+const ctrText = (c, v) => (v ? fmtNum((c / v) * 100, 1) + '%' : '–');
+
+/** Kaynak tablosu: rows [{k, v, u, c}] (db.sourceBreakdown) */
+function sourceTable(rows, totalViews) {
+  if (!rows.length) return html`<p class="muted small">Bu dönemde ziyaret yok. Bio sayfası açıldıkça burada görünür.</p>`;
+  return html`<div class="tw"><table class="srct"><thead><tr><th>Kaynak</th><th class="n"><span class="d-i">Ziyaret</span><span class="m-i">Ziy.</span></th><th class="n hm">Tekil</th><th class="n">Pay</th><th class="n"><span class="d-i">Tıklama</span><span class="m-i">Tık.</span></th><th class="n">CTR</th></tr></thead><tbody>
+    ${rows.map((r) => html`<tr><td class="src">${trafficLabel(r.k)}</td><td class="n">${fmtNum(r.v)}</td><td class="n hm">${fmtNum(r.u)}</td>
+      <td class="n">${r.k === '?' ? '–' : pct(r.v, totalViews)}</td><td class="n">${fmtNum(r.c)}</td><td class="n">${r.k === '?' ? '–' : ctrText(r.c, r.v)}</td></tr>`)}
+  </tbody></table></div>`;
+}
+
 // ---------------------------------------------------------------- genel bakış
 async function overview(env) {
-  const [list, t] = await Promise.all([db.influencerStats(env.DB), db.totals(env.DB)]);
+  const now = Date.now();
+  const d30 = daysAgo(29, now);
+  const [list, t, vk, src] = await Promise.all([
+    db.influencerStats(env.DB), db.totals(env.DB),
+    db.viewKpis(env.DB, { today: daysAgo(0, now), d7: daysAgo(6, now), d30, all: null }),
+    db.sourceBreakdown(env.DB, d30),
+  ]);
   const cell = (s7, s30, sa, f = fmtNum) =>
     html`<td class="n" data-s7="${s7}" data-s30="${s30}" data-sa="${sa}" data-t7="${f(s7)}" data-t30="${f(s30)}" data-ta="${f(sa)}" data-sort="${s30}">${f(s30)}</td>`;
   const ctr = (c, v) => (v ? (c / v) * 100 : -1);
@@ -110,6 +133,14 @@ async function overview(env) {
   const org = t.organic;
   const body = html`
     <div class="row" style="margin-bottom:12px"><h1 style="margin:0">Genel bakış</h1><span class="spacer"></span><a class="btn" href="/admin/new">+ Yeni link oluştur</a></div>
+    <div class="sec">Bio sayfası · <span class="dom">isailetisim.com</span></div>
+    ${viewKpiRow(vk, OVERVIEW_PERIODS, 'd30')}
+    <div class="card" id="kaynaklar">
+      <div class="row" style="margin-bottom:10px"><h2 style="margin:0">Nereden geliyorlar? <span class="muted small">(son 30 gün)</span></h2><span class="spacer"></span>
+        <a class="btn ghost sm" href="/admin/ziyaretciler">Tüm ayrıntılar →</a></div>
+      ${sourceTable(src, vk.d30.v)}
+    </div>
+    <div class="sec">Influencer linkleri</div>
     ${kpiRow(t.att)}
     <p class="small muted" style="margin:-6px 0 16px">Büyük sayı son 30 gün. Yalnız influencer linkiyle gelenler sayılır.
       Ref'siz (organik) son 30 gün: ${fmtNum(org.c30)} tıklama, ${fmtNum(org.p30)} satın alma (${fmtTRY(org.r30)}).</p>
@@ -204,7 +235,10 @@ async function createLink(request, env) {
   v.target = v.targetRaw || '/';
   if (!v.name) return newLinkPage(env, v, 'İsim gerekli.', 400);
   if (!isValidCode(v.code)) {
-    const why = RESERVED_CODES.has(v.code) ? 'Bu kod sistemde ayrılmış.' : 'Kod geçersiz: küçük harf, rakam ve tire; tireyle başlayıp bitemez.';
+    const why = CHANNELS[v.code]
+      ? `"${v.code}" kodu kanal linki için ayrılmış (isailetisim.com/${v.code} → ${trafficLabel(CHANNELS[v.code])}). Başka bir kod seç.`
+      : RESERVED_CODES.has(v.code) ? `"${v.code}" kodu sistemde ayrılmış (admin, api, assets, i…). Başka bir kod seç.`
+      : 'Kod geçersiz: küçük harf, rakam ve tire; tireyle başlayıp bitemez.';
     return newLinkPage(env, v, why, 400);
   }
   const target = normalizeTarget(v.targetRaw);
@@ -244,8 +278,9 @@ function shareTable(rows, labelFn, head, total) {
 async function detailPage(env, inf, url) {
   const code = inf.code;
   const pageNo = Math.max(1, parseInt(url.searchParams.get('sayfa') || '1', 10) || 1);
-  const [t, series, br, ev] = await Promise.all([
+  const [t, series, br, ev, landing] = await Promise.all([
     db.codeTotals(env.DB, code), db.dailySeries(env.DB, code, 90), db.breakdowns(env.DB, code), db.eventPage(env.DB, code, pageNo, PER_PAGE),
+    db.codeViewCount(env.DB, code),
   ]);
   const link = linkFor(env, code);
   const ok = OK_MSG[url.searchParams.get('ok')];
@@ -299,7 +334,8 @@ async function detailPage(env, inf, url) {
 
     ${kpiRow(t)}
     <p class="small muted" style="margin:-6px 0 16px">CTR (tıklama / ziyaret): 7 gün ${pct(t.c7, t.v7)} · 30 gün ${pct(t.c30, t.v30)} · tümü ${pct(t.c, t.v)}.
-      Son aktivite: ${t.last_ts ? fmtDateTime(t.last_ts) : '—'}</p>
+      Son aktivite: ${t.last_ts ? fmtDateTime(t.last_ts) : '—'}<br>
+      Sayfa görüntüleme (landing): <b>${fmtNum(landing.n)}</b> <span class="muted">(30 gün: ${fmtNum(landing.n30)}; bio sayfası ?ref=${code} ile açıldı)</span></p>
 
     <div class="card"><h2>Son <span class="d-i">90</span><span class="m-i">30</span> gün</h2>${chartBlock(series)}
       <details style="margin-top:12px" ${series.slice(0, 14).some((d) => d.v || d.c || d.p) ? raw('open') : ''}><summary class="small" style="cursor:pointer;font-weight:600">Günlük tablo</summary>
@@ -383,15 +419,51 @@ async function exportCsv(env, inf) {
 }
 
 // ---------------------------------------------------------------- ayarlar
-async function settingsPage(env) {
+const NOVIEW_MAX_AGE = 365 * 86400;
+const SETTINGS_OK = { sayma: 'Bu tarayıcıdan bio sayfası ziyaretlerin ve tıklamaların artık sayılmıyor (1 yıl).', say: 'Bu tarayıcı yeniden sayılıyor.' };
+
+/** "Beni sayma" / "Tekrar say": ynoview çerezi (apex alan adı, Path=/, 1 yıl). Panel apex'te açıldığı için çerez de apex'e yazılır. */
+async function setNoView(request) {
+  const form = await request.formData();
+  const on = String(form.get('mode') || '') === 'on';
+  const cookie = on
+    ? `${NOVIEW_COOKIE}=1; Max-Age=${NOVIEW_MAX_AGE}; Path=/; HttpOnly; Secure; SameSite=Lax`
+    : `${NOVIEW_COOKIE}=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax`;
+  return see(`/admin/settings?ok=${on ? 'sayma' : 'say'}#ben`, { 'set-cookie': cookie });
+}
+
+async function settingsPage(request, env, url) {
   const origin = publicOrigin(env);
+  const excluded = parseCookies(request.headers.get('cookie'))[NOVIEW_COOKIE] === '1';
+  const ok = SETTINGS_OK[url.searchParams.get('ok')];
   const { allPages, orderPage } = ticimaxSnippets(origin);
   const unknown = await db.recentUnknownHits(env.DB);
   const curl = `curl -X POST ${origin}/api/purchase \\
   -H 'Content-Type: application/json' \\
   -H 'X-Postback-Key: PURCHASE_KEY_DEGERI' \\
   -d '{"ref":"ayse-kaya","order_id":"100234","amount":5999,"currency":"TRY","source":"site","note":"test"}'`;
+  const chan = Object.entries(CHANNELS).map(([short, src]) => {
+    const l = `${origin}/${short}`;
+    return html`<div class="linkbox"><b>${trafficLabel(src)}</b><code>${l.replace(/^https?:\/\//, '')}</code><button class="btn sm" type="button" data-copy="${l}">Kopyala</button></div>`;
+  });
   const body = html`<h1>Ayarlar</h1>
+    ${ok ? html`<div class="alert ok">${ok}</div>` : ''}
+    <div class="card" id="kanallar"><h2>Bio linkleri (kanal başına)</h2>
+      <p class="small">Her platformun bio'suna kendi linkini koy: Instagram bio'suna <b>${origin.replace(/^https?:\/\//, '')}/ig</b>, TikTok'a <b>/tt</b> gibi.
+      Link ziyaretçiyi bio sayfasına götürür ve ziyareti o kanala yazar. Bu linkler olmadan da Instagram, TikTok ve Facebook uygulamasından gelen ziyaret
+      uygulama içi tarayıcıdan büyük ölçüde tanınır; ama uygulamalar çoğu zaman nereden geldiğini (referer) gizler ve kişi linki kopyalayıp Safari'de açarsa
+      "Direkt" görünür. Etiketli link her durumda kesindir. Başka bir yer için <code>?s=</code> ile kendi etiketini de verebilirsin: <code>${origin.replace(/^https?:\/\//, '')}/?s=kasim-cekilis</code>.</p>
+      <div class="chan">${chan}</div>
+    </div>
+    <div class="card" id="ben"><h2>Kendi ziyaretlerim</h2>
+      <p class="small">Bio sayfasını kendin açınca sayılmasın istiyorsan bu tarayıcıda <b>Beni sayma</b>'ya bas. 1 yıl geçerli, yalnız bu tarayıcı ve bu
+      cihaz için. Instagram/TikTok uygulamasının kendi tarayıcısı ayrı bir tarayıcıdır; orada da saymasın istiyorsan paneli oradan açıp bir kez daha bas.</p>
+      <p class="small">Durum: ${excluded ? html`<span class="badge purchase">Bu tarayıcı sayılmıyor</span>` : html`<span class="badge">Bu tarayıcı sayılıyor</span>`}</p>
+      <div class="row">
+        <form method="post" action="/admin/settings/noview"><input type="hidden" name="mode" value="on"><button class="btn${excluded ? ' ghost' : ''}" type="submit">Beni sayma</button></form>
+        <form method="post" action="/admin/settings/noview"><input type="hidden" name="mode" value="off"><button class="btn ${excluded ? '' : 'ghost'}" type="submit">Tekrar say</button></form>
+      </div>
+    </div>
     <div class="card"><h2>Satın alma bildirimi (postback)</h2>
       <p>Uç nokta: <code>POST ${origin}/api/purchase</code><br>
       Başlık: <code>X-Postback-Key: &lt;PURCHASE_KEY&gt;</code> · Gövde (JSON): <code>{ref, order_id, amount, currency, source, note}</code></p>
@@ -411,4 +483,121 @@ async function settingsPage(env) {
     </div>
     <div class="card"><h2>Oturum</h2><form method="post" action="/admin/logout"><button class="btn danger" type="submit">Çıkış yap</button></form></div>`;
   return page({ title: 'Ayarlar', nav: 'settings', body });
+}
+
+// ---------------------------------------------------------------- bio sayfası ziyaretçileri
+const RANGES = { 7: '7 gün', 30: '30 gün', 90: '90 gün', tumu: 'Tümü' };
+const VIEW_PER_PAGE = 50; // telefonda 100 satırlık kayıt sayfayı çok uzatıyor
+
+function parseRange(url) {
+  let r = String(url.searchParams.get('range') || '30').toLowerCase();
+  if (r === 'all') r = 'tumu';
+  return RANGES[r] ? r : '30';
+}
+
+/** Seçili dönemin ilk günü (tümü: null) */
+const rangeFrom = (r, now = Date.now()) => (r === 'tumu' ? null : daysAgo(Number(r) - 1, now));
+
+function viewRows(rows) {
+  return rows.map((e) => html`<tr>
+    <td class="t">${fmtDateTime(e.ts)}</td>
+    <td class="src">${trafficLabel(e.target)}</td>
+    <td>${DEVICE_LABELS[e.device] || e.device || ''}${e.browser ? html`<span class="sub">${e.browser}</span>` : ''}</td>
+    <td>${[e.country, e.city].filter(Boolean).join(' / ')}</td>
+    <td>${e.referer || ''}</td>
+    <td>${e.code ? html`<a href="/admin/i/${e.code}">${e.code}</a>` : ''}</td>
+  </tr>`);
+}
+
+async function visitorsPage(env, url) {
+  const now = Date.now();
+  const range = parseRange(url);
+  const from = rangeFrom(range, now);
+  const pageNo = Math.max(1, parseInt(url.searchParams.get('sayfa') || '1', 10) || 1);
+
+  // Günlük seri uzunluğu: seçili dönem; "tümü"nde ilk görüntülemeden bugüne (en çok 2 yıl)
+  let days = range === 'tumu' ? 30 : Number(range);
+  if (range === 'tumu') {
+    const first = await db.firstViewDay(env.DB);
+    if (first) days = Math.min(730, Math.max(1, Math.round((Date.parse(daysAgo(0, now)) - Date.parse(first)) / DAY_MS) + 1));
+  }
+  const froms = { today: daysAgo(0, now), d7: daysAgo(6, now), d30: daysAgo(29, now) };
+  if (range === '90') froms.d90 = daysAgo(89, now);
+  froms.all = null;
+  const mainKey = range === 'tumu' ? 'all' : `d${range}`;
+  const periods = [{ key: mainKey, label: RANGES[range] }, { key: 'today', label: 'Bugün' }, { key: 'd7', label: '7 gün' }, { key: 'd30', label: '30 gün' }, { key: 'all', label: 'Tümü' }]
+    .filter((p, i, a) => a.findIndex((x) => x.key === p.key) === i);
+
+  const [k, src, series, br, ev] = await Promise.all([
+    db.viewKpis(env.DB, froms), db.sourceBreakdown(env.DB, from), db.viewDaily(env.DB, days, now), db.viewBreakdowns(env.DB, from), db.viewPage(env.DB, from, pageNo, VIEW_PER_PAGE),
+  ]);
+  const sel = k[mainKey];
+  const pages = Math.max(1, Math.ceil(ev.total / VIEW_PER_PAGE));
+  const q = (extra = '') => `?range=${range}${extra}`;
+  const sumN = (a) => a.reduce((x, r) => x + r.n, 0);
+  const devTotal = sumN(br.devices);
+
+  const seg = html`<div class="seg">${Object.entries(RANGES).map(([key, label]) => html`<a href="?range=${key}" class="${key === range ? 'on' : ''}">${label}</a>`)}</div>`;
+  const pager = pages > 1 ? html`<div class="pager">
+      ${pageNo > 1 ? html`<a class="btn ghost sm" href="${q(`&sayfa=${pageNo - 1}`)}#kayit">← Yeni</a>` : ''}
+      <span class="small muted">Sayfa ${pageNo} / ${pages} · ${fmtNum(ev.total)} ziyaret</span>
+      ${pageNo < pages ? html`<a class="btn ghost sm" href="${q(`&sayfa=${pageNo + 1}`)}#kayit">Eski →</a>` : ''}</div>`
+    : html`<p class="small muted" style="margin:10px 0 0">${fmtNum(ev.total)} ziyaret</p>`;
+
+  const body = html`
+    <div class="row" style="margin-bottom:12px"><h1 style="margin:0">Ziyaretçiler</h1><span class="spacer"></span>${seg}</div>
+    <p class="small muted" style="margin:-4px 0 12px">Bio sayfasının (isailetisim.com) açılışları. Botlar, link önizlemeleri ve aynı kişinin 30 sn içindeki tekrarı sayılmaz.
+      Tekil = farklı cihaz/ağ (IP özeti). Tıklama = sayfadan bir mağazaya geçiş.</p>
+    ${viewKpiRow(k, periods, mainKey)}
+
+    <div class="card"><h2>Gün gün <span class="muted small">(${RANGES[range]}${range === 'tumu' ? `: ${fmtNum(days)} gün` : ''})</span></h2>
+      ${chartBlock(series)}
+      <details style="margin-top:12px" ${series.slice(0, 14).some((d) => d.v || d.c) ? raw('open') : ''}><summary class="small" style="cursor:pointer;font-weight:600">Günlük tablo</summary>
+      <div class="tw scroll" style="margin-top:8px"><table><thead><tr><th>Tarih</th><th class="n">Ziyaret</th><th class="n">Tekil</th><th class="n">Tıklama</th><th class="n">CTR</th></tr></thead><tbody>
+        ${series.map((d) => html`<tr class="${d.v || d.c ? '' : 'zero'}"><td>${fmtDay(d.day)}</td><td class="n">${fmtNum(d.v)}</td><td class="n">${fmtNum(d.u)}</td><td class="n">${fmtNum(d.c)}</td><td class="n">${ctrText(d.c, d.v)}</td></tr>`)}
+      </tbody></table></div></details>
+    </div>
+
+    <div class="card" id="kaynaklar"><h2>Nereden geliyorlar? <span class="muted small">(${RANGES[range]})</span></h2>
+      ${sourceTable(src, sel.v)}
+      <p class="small muted" style="margin:10px 0 0">Kaynak sırası: <code>?s=</code> etiketi (kanal linkleri /ig, /tt…) → influencer linki (?ref=) → geldiği site (referer)
+        → uygulama içi tarayıcı → Direkt. Tıklama, aynı kişinin son 1 saatteki ziyaretinin kaynağına yazılır.</p>
+      ${br.webs.length ? html`<details style="margin-top:10px"><summary class="small" style="cursor:pointer;font-weight:600">Diğer web siteleri (${br.webs.length})</summary>
+        <div style="margin-top:8px">${shareTable(br.webs, (r) => trafficLabel(r.k), 'Site', sumN(br.webs))}</div></details>` : ''}
+    </div>
+
+    <div class="grid two">
+      <div class="card"><h2>Cihaz ve tarayıcı</h2>
+        ${shareTable(br.devices, (r) => DEVICE_LABELS[r.k] || r.k, 'Cihaz', devTotal)}
+        <div style="height:12px"></div>
+        ${shareTable(br.browsers, (r) => r.k, 'Tarayıcı', devTotal)}</div>
+      <div class="card"><h2>Konum <span class="muted small">(ilk 15)</span></h2>${shareTable(br.places, (r) => [r.country, r.city].filter(Boolean).join(' / '), 'Ülke / şehir', devTotal)}</div>
+    </div>
+
+    <div class="card"><h2>Saate göre <span class="muted small">(İstanbul saati)</span></h2>${hourChart(br.hours)}</div>
+
+    <div class="card" id="kayit">
+      <div class="row" style="margin-bottom:10px"><h2 style="margin:0">Ziyaret kaydı</h2><span class="spacer"></span><a class="btn ghost sm" href="/admin/ziyaretciler/export.csv${q()}">CSV indir (${RANGES[range]})</a></div>
+      ${ev.rows.length ? html`<div class="tw"><table class="stack"><thead><tr><th>Zaman</th><th>Kaynak</th><th>Cihaz</th><th>Konum</th><th>Referer</th><th>Ref kodu</th></tr></thead>
+        <tbody>${viewRows(ev.rows)}</tbody></table></div>${pager}` : html`<p class="muted small">Bu dönemde ziyaret yok.</p>`}
+    </div>`;
+  return page({ title: 'Ziyaretçiler', nav: 'views', body });
+}
+
+async function exportViewsCsv(env, url) {
+  const range = parseRange(url);
+  const rows = await db.allViews(env.DB, rangeFrom(range));
+  const head = ['id', 'zaman_istanbul', 'gun', 'kaynak', 'kaynak_adi', 'cihaz', 'tarayici', 'ulke', 'sehir', 'referer', 'ref_kodu', 'adres', 'ua'];
+  const lines = [head.join(';')];
+  for (const e of rows) {
+    lines.push([e.id, fmtDateTime(e.ts), e.day, e.target, trafficLabel(e.target), e.device, e.browser, e.country, e.city, e.referer, e.code, e.href, e.ua].map(csvCell).join(';'));
+  }
+  return new Response('﻿' + lines.join('\r\n') + '\r\n', {
+    headers: {
+      'content-type': 'text/csv; charset=utf-8',
+      'content-disposition': `attachment; filename="isailetisim-ziyaretciler-${range}-${dayOf(Date.now())}.csv"`,
+      'cache-control': 'no-store',
+      'x-robots-tag': 'noindex',
+    },
+  });
 }

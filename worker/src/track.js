@@ -1,9 +1,13 @@
 // Herkese açık takip uçları: /i/:code, /api/click, /api/purchase
 import { getInfluencer, insertEventDedup, insertEvent, logUnknownHit, purchaseExists } from './db.js';
-import { dayOf, parseUA, ipHash, refererDomain, isValidCode, cleanTarget, clip, parseCookies, parseAmount, json } from './util.js';
+import { dayOf, parseUA, ipHash, refererDomain, isValidCode, cleanTarget, clip, parseCookies, parseAmount, json, CHANNELS } from './util.js';
 import { safeEqual } from './auth.js';
+import { detectSource } from './sources.js';
 
 export const REF_COOKIE = 'yref';
+/** Sahibinin kendi ziyaretini saymamak için (panel > Ayarlar > Beni sayma). */
+export const NOVIEW_COOKIE = 'ynoview';
+const VIEW_DEDUP_MS = 30 * 1000;
 const REF_MAX_AGE = 30 * 86400;
 const VISIT_DEDUP_MS = 30 * 1000;
 const CLICK_DEDUP_MS = 5 * 1000;
@@ -56,6 +60,38 @@ function requestMeta(request) {
   };
 }
 
+const isExcluded = (request) => parseCookies(request.headers.get('cookie'))[NOVIEW_COOKIE] === '1';
+
+/** /ig, /tt, /fb, /x, /yt, /ln, /wa, /tg -> /?s=<kısa> (görüntüleme bio sayfasında o kaynakla yazılır) */
+export function channelRedirect(short) {
+  if (!CHANNELS[short]) return null;
+  return redirect(`/?s=${short}`);
+}
+
+/** Bio sayfası (/) sunulduktan sonra ctx.waitUntil içinde çağrılır: görüntülemeyi yazar. Yanıtı bekletmez. */
+export async function pageView(request, env) {
+  if (request.method !== 'GET') return false;
+  // Tarayıcı ön yüklemesi (prefetch/prerender) insan açılışı değil
+  const purpose = (request.headers.get('sec-purpose') || request.headers.get('purpose') || '').toLowerCase();
+  if (purpose.includes('prefetch')) return false;
+  if (isExcluded(request)) return false;
+  const meta = requestMeta(request);
+  if (!meta.ua || meta.browser === 'Bot') return false;
+
+  const url = new URL(request.url);
+  const rawReferer = request.headers.get('referer');
+  let { source, code } = detectSource({ url, referer: rawReferer, browser: meta.browser });
+  if (code && !(await getInfluencer(env.DB, code))) ({ source, code } = detectSource({ url, referer: rawReferer, browser: meta.browser, ignoreRef: true }));
+
+  const now = Date.now();
+  const ev = {
+    ts: now, day: dayOf(now), type: 'view', code, target: source,
+    href: clip(url.pathname + url.search, 300), ip_hash: await ipHash(request, env), ...meta,
+  };
+  // Aynı ip_hash 30 sn içinde tekrar açarsa (yenileme, geri gelme) kaynaktan/koddan bağımsız tek sayılır.
+  return insertEventDedup(env.DB, ev, VIEW_DEDUP_MS, { byCode: false });
+}
+
 /** GET /i/:code  (ve kod varsa /:code) */
 export async function influencerHit(request, env, ctx, code) {
   code = String(code || '').toLowerCase();
@@ -99,7 +135,7 @@ export async function click(request, env, ctx) {
   const body = await readJson(request);
   if (!body) return json({ ok: false, error: 'body' }, 400);
   const meta = requestMeta(request);
-  if (meta.browser === 'Bot') return new Response(null, { status: 204 });
+  if (meta.browser === 'Bot' || isExcluded(request)) return new Response(null, { status: 204 });
 
   let href = clip(body.href, 1000);
   let host = null;

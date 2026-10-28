@@ -10,13 +10,16 @@ Veritabanı D1. Panel `/admin`. Derleme adımı yok, framework yok.
 | `/i/<kod>` | Ziyaret yazar, `yref` çerezini 30 gün koyar, hedefe 302 ile yollar. Kısa biçim `/<kod>` da çalışır (yalnız kod varsa). |
 | `POST /api/click` | Bio sayfasındaki her dış tıklamayı yazar (Trendyol, Hepsiburada, site…). |
 | `POST /api/purchase` | Siteden satın alma bildirimi (`X-Postback-Key` gerekir). |
-| `/admin` | Türkçe panel: genel bakış, yeni link, influencer detayı, CSV, elle satış girişi, ayarlar. |
+| `/` | Bio sayfası. Her açılış arkada `view` olayı olarak yazılır (aşağıda **Ziyaretçi sayacı**). |
+| `/ig` `/tt` `/fb` `/x` `/yt` `/ln` `/wa` `/tg` | Kanal linki: 302 ile `/?s=<kısa>`'ya gider; ziyaret o kanala yazılır. |
+| `/admin` | Türkçe panel: genel bakış, ziyaretçiler, yeni link, influencer detayı, CSV, elle satış girişi, ayarlar. |
 | geri kalan her şey | `../` klasöründeki statik bio sitesi (`index.html`, `assets/`). Olmayan yol 404. |
 
 Dosyalar: `src/index.js` yönlendirici · `src/track.js` takip uçları · `src/admin.js` panel ·
 `src/db.js` SQL · `src/html.js` şablon ve stil · `src/auth.js` giriş/oturum · `src/util.js` yardımcılar ·
-`src/snippets.js` Ticimax betiği · `migrations/0001_init.sql` şema (`schema.sql` aynısı) ·
-`bio-snippet.html` index.html'e eklenecek betik · `test/` testler.
+`src/sources.js` ziyaret kaynağı tespiti · `src/snippets.js` Ticimax betiği · `migrations/` şema
+(`schema.sql` iki migration'ın sonucu) · `bio-snippet.html` index.html'e eklenecek betik · `test/` testler
+(`test/seed.sql` yerel örnek veri).
 
 ## Canlıya alma (bir kez)
 
@@ -40,6 +43,10 @@ Komutların hepsi `worker/` klasöründe çalışır.
 7. `bio-snippet.html` içindeki betiği `index.html`'de `</body>`'den hemen önce yapıştır ve yayınla.
 
 Sonraki her değişiklik: `npx wrangler deploy`. Yeni migration varsa önce 3. adım.
+
+**0002_views (ziyaretçi sayacı) için sıra önemli:** önce `npx wrangler d1 migrations apply isailetisim --remote`,
+sonra `npx wrangler deploy`. Ters sırada yeni kod `view` yazmaya çalışır, eski CHECK kısıtı reddeder; hata yalnız
+loglara düşer, sayfa yine açılır, ama o aradaki ziyaretler kaybolur.
 
 ## Link oluşturma
 
@@ -65,6 +72,64 @@ Bir influencer'la iş bitince **Pasifleştir**: link ana sayfaya gider, sayılma
 - **Satın alma ekle**: pazaryeri satışını elle gir (tarih, kaynak, tutar, sipariş no). Yanlış girdiğini olay
   kaydındaki **Sil** ile kaldır.
 - Saatler İstanbul saatidir.
+
+## Ziyaretçi sayacı
+
+Panel > **Ziyaretçiler** (`/admin/ziyaretciler`) ve Genel bakış'ın üstündeki dört kutu: bio sayfasını kaç kişinin
+açtığı, nereden geldiği, kaçının mağazaya tıkladığı.
+
+**Ne sayılır.** `GET /` isteği sayfa sunulduktan sonra arkada (`ctx.waitUntil`) `view` olayı olarak yazılır;
+sayfa bir milisaniye bile beklemez. Tarayıcı önbellekten tekrar doğrularsa (304) o da açılış sayılır.
+Sayılmayanlar: botlar ve link önizlemeleri (WhatsApp, Facebook, Telegram…, `curl`, headless tarayıcılar, UA'sız
+istekler), tarayıcı ön yüklemesi (`Sec-Purpose: prefetch`), `HEAD`, `/assets/...` dosyaları, aynı ip_hash'in 30 sn
+içindeki ikinci açılışı (kaynağı farklı olsa da) ve `ynoview=1` çerezi olan tarayıcı.
+
+- **Ziyaret**: açılış sayısı. **Tekil ziyaretçi**: farklı `ip_hash` sayısı (aynı Wi-Fi'deki iki telefon tek görünür,
+  mobil veride IP değişen kişi iki görünebilir; yaklaşık bir sayıdır).
+- **Tıklama**: bio sayfasından mağazaya geçiş (`/api/click`). **Tıklama oranı** = tıklama / ziyaret.
+- Kaynak tablosundaki tıklama: aynı ip_hash'in tıklamadan önceki **son 1 saatteki** en yeni ziyaretinin kaynağına
+  yazılır. Eşleşen ziyaret yoksa "Eşleşmeyen tıklama" satırına düşer.
+
+**Kaynak nasıl bulunur** (`events.target`, ilk tutan kazanır):
+1. `?s=` etiketi: `ig tt fb x yt ln wa tg` → instagram, tiktok, facebook, x, youtube, linkedin, whatsapp, telegram.
+   Başka değer → `s:<etiket>` (Türkçe harfler sadeleşir, en çok 20 karakter): `/?s=kasim-cekilis` → "Etiket: kasim-cekilis".
+2. `?ref=<kod>` (influencer linki `/i/<kod>` buraya yollar) ve kod kayıtlıysa → `influencer`, `code` dolar.
+   Influencer detayındaki "Sayfa görüntüleme (landing)" bunu sayar.
+3. Referer alan adı: instagram.com, tiktok.com, facebook.com, t.co/x.com/twitter.com, youtube.com/youtu.be,
+   linkedin.com/lnkd.in, google.*, whatsapp.com/wa.me, t.me/telegram.org; Android uygulama referer'ı
+   (`android-app://com.instagram.android`) da tanınır. Başka site → `web:<alan adı>` ("Diğer web"). Kendi alan adımız yok sayılır.
+4. Uygulama içi tarayıcı: Instagram, TikTok, Facebook (ve X) tarayıcısının UA'sı.
+5. Hiçbiri yoksa `direkt`.
+
+Ham referer alan adı ayrıca `events.referer`'da durur.
+
+**Kanal linkleri.** Her platformun bio'suna kendi linkini koy (Ayarlar'da kopyala düğmeli liste var):
+
+| Link | Kaynak |
+|---|---|
+| `https://isailetisim.com/ig` | Instagram |
+| `https://isailetisim.com/tt` | TikTok |
+| `https://isailetisim.com/fb` | Facebook |
+| `https://isailetisim.com/x` | X |
+| `https://isailetisim.com/yt` | YouTube |
+| `https://isailetisim.com/ln` | LinkedIn |
+| `https://isailetisim.com/wa` | WhatsApp |
+| `https://isailetisim.com/tg` | Telegram |
+
+Bu kodlar (ve `admin`, `api`, `assets`, `i`) influencer kodu olarak verilemez.
+
+**Kendini sayma.** Ayarlar > **Beni sayma**: `ynoview=1` çerezi (1 yıl, `Path=/`, apex alan adı). O tarayıcıdan bio
+açılışları ve mağaza tıklamaları yazılmaz. **Tekrar say** çerezi siler. Çerez tarayıcıya özeldir: Instagram/TikTok
+uygulamasının kendi tarayıcısında da sayılmamak için paneli orada açıp bir kez daha bas.
+
+**Sınırlar.**
+- Uygulama içi tarayıcılar referer'ı çoğu zaman göndermez; Instagram/TikTok/Facebook yine UA'dan tanınır ama
+  WhatsApp, Telegram, YouTube gibi uygulamalardan gelen etiketsiz ziyaret "Direkt" görünebilir. Kesin sayı için kanal linki kullan.
+- Kişi linki kopyalayıp Safari'ye yapıştırırsa referer ve UA ipucu kaybolur → "Direkt" (etiketli linkte `?s=` kalır).
+- Ülke ve şehir Cloudflare'in `request.cf` / `cf-ipcountry` bilgisinden gelir; şehir IP tabanlı tahmindir, mobil
+  operatörde çoğu zaman operatörün merkezi (genelde İstanbul) görünür. Yerel geliştirmede boştur.
+- Reklam engelleyiciler bu sayacı engellemez (sunucu tarafı), ama tıklama betiğini engelleyebilir; tıklama oranı alt sınırdır.
+- Saatler İstanbul saatidir (UTC+3).
 
 ## Neler atanabilir, neler atanamaz
 
@@ -188,4 +253,5 @@ npx wrangler d1 migrations apply isailetisim --local
 npx wrangler dev --local --port 8788    # http://localhost:8788/admin
 npm test                                # saf mantık testleri (Cloudflare gerekmez)
 bash test/e2e.sh                        # dev sunucusu açıkken uçtan uca test (yerel veritabanını sıfırlar)
+npx wrangler d1 execute isailetisim --local --file test/seed.sql   # yerel örnek veri: 2 influencer, ~300 olay, 20 gün
 ```

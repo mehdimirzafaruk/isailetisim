@@ -36,7 +36,7 @@ export const pct = (a, b) => (b ? fmtNum((a / b) * 100, 1) + '%' : '–');
 export const PLATFORMS = ['Instagram', 'TikTok', 'YouTube', 'X', 'Diğer'];
 export const SOURCE_LABELS = { site: 'yasomi.com.tr', trendyol: 'Trendyol', hepsiburada: 'Hepsiburada', amazon: 'Amazon', pazarama: 'Pazarama', temu: 'Temu', diger: 'Diğer' };
 export const DEVICE_LABELS = { mobile: 'Mobil', tablet: 'Tablet', desktop: 'Masaüstü' };
-export const TYPE_LABELS = { visit: 'Ziyaret', click: 'Tıklama', purchase: 'Satın alma' };
+export const TYPE_LABELS = { visit: 'Ziyaret', click: 'Tıklama', purchase: 'Satın alma', view: 'Görüntüleme' };
 
 const CSS = `
 :root{--blue:#26B0DE;--btn:#157A9B;--btn-h:#0f6580;--text:#1F1F1F;--muted:#6B7378;--bg:#F6F8F9;--card:#fff;--line:#E3E8EB;--ok:#1E8E5A;--warn:#B4590B;--bad:#C0392B;--r:12px}
@@ -90,6 +90,21 @@ th.sort.desc:after{content:" ↓";opacity:1}
 .badge.visit{background:#E6F6FC;color:#157A9B}
 .badge.click{background:#EEF0FF;color:#4651B8}
 .badge.purchase{background:#E5F6EE;color:var(--ok)}
+.badge.view{background:#FFF4E5;color:var(--warn)}
+.seg a{display:inline-block;padding:6px 12px;border-radius:999px;font:600 13px Montserrat,system-ui,sans-serif;color:var(--muted);text-decoration:none}
+.seg a.on{background:#fff;color:var(--btn);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.sec{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:4px 0 8px}
+.hours{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:3px;align-items:end;height:120px}
+.hours>div{display:flex;flex-direction:column;align-items:center;height:100%;min-width:0}
+.hours .b{flex:1;width:100%;display:flex;align-items:flex-end}
+.hours i{display:block;width:100%;background:var(--blue);border-radius:3px 3px 0 0;min-height:2px}
+.hours i.z{background:#E3E8EB}
+.hours span{font-size:10px;color:var(--muted);margin-top:4px;line-height:1}
+.chan{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.chan .linkbox b{font-size:13px;min-width:74px}
+td.src{font-weight:600}
+.pi{white-space:nowrap}
+.sec .dom{text-transform:none;letter-spacing:.02em}
 .linkbox{display:flex;gap:8px;align-items:center;background:#F0F9FC;border:1px solid #CDEBF5;border-radius:10px;padding:8px 8px 8px 12px;min-width:0;max-width:100%}
 .linkbox code{font:600 14px ui-monospace,SFMono-Regular,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
 form .f{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;min-width:0}
@@ -119,7 +134,7 @@ pre{background:#0F2730;color:#DDF3FA;padding:14px;border-radius:10px;overflow:au
 #inf td:first-child{background:#fff}
 .nm small{display:block;font-weight:500;color:var(--muted);font-size:12px}
 @media (max-width:860px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.three{grid-template-columns:1fr}}
-@media (max-width:640px){.chart svg.d,.d-i{display:none}.chart svg.m{display:block}.m-i{display:inline}
+@media (max-width:640px){.chan{grid-template-columns:1fr}.hm{display:none}.srct td.src{white-space:normal;min-width:96px}.hours span{visibility:hidden}.hours>div:nth-child(3n+1) span{visibility:visible}.chart svg.d,.d-i{display:none}.chart svg.m{display:block}.m-i{display:inline}
 th,td{padding:7px 6px;font-size:13px}th{font-size:11px}
 .linkbox code{white-space:normal;overflow-wrap:anywhere;font-size:13px}
 table.stack thead{display:none}table.stack,table.stack tbody{display:block}
@@ -147,7 +162,7 @@ export function layout({ title, body, nav = '', loggedIn = true }) {
   const link = (href, key, label) => html`<a href="${href}" class="${nav === key ? 'on' : ''}">${label}</a>`;
   const top = loggedIn
     ? html`<header class="top"><div class="in"><a class="brand" href="/admin"><i></i>Yasomi · Influencer</a>
-        <nav class="nav">${[link('/admin', 'home', 'Genel bakış'), link('/admin/new', 'new', 'Yeni link'), link('/admin/settings', 'settings', 'Ayarlar')]}</nav></div></header>`
+        <nav class="nav">${[link('/admin', 'home', 'Genel bakış'), link('/admin/ziyaretciler', 'views', 'Ziyaretçiler'), link('/admin/new', 'new', 'Yeni link'), link('/admin/settings', 'settings', 'Ayarlar')]}</nav></div></header>`
     : raw('');
   return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>${esc(title)} · Yasomi Influencer</title>
@@ -175,6 +190,36 @@ export function page(opts, status = 200, headers = {}) {
 export function kpiTile(label, v7, v30, vAll, fmt = fmtNum) {
   return html`<div class="kpi"><div class="l">${label}</div><div class="v" title="Son 30 gün">${fmt(v30)}</div>
     <div class="s">30 gün · 7 gün: <b>${fmt(v7)}</b> · Tümü: <b>${fmt(vAll)}</b></div></div>`;
+}
+
+/**
+ * Dönemli KPI kutusu: büyük sayı `main` dönemi, altında diğer dönemler.
+ * periods: [{ key, label, value }]
+ */
+export function periodTile(label, periods, main, fmt = fmtNum) {
+  const big = periods.find((p) => p.key === main) || periods[0];
+  const rest = periods.filter((p) => p !== big);
+  return html`<div class="kpi"><div class="l">${label}</div><div class="v" title="${big.label}">${fmt(big.value)}</div>
+    <div class="s"><span class="pi">${big.label}</span>${rest.map((p) => html` · <span class="pi">${p.label}: <b>${fmt(p.value)}</b></span>`)}</div></div>`;
+}
+
+/** Bio sayfası KPI satırı. k: { anahtar: {v,u,c} }, periods: [{key,label}] */
+export function viewKpiRow(k, periods, main) {
+  const per = (f) => periods.map((p) => ({ key: p.key, label: p.label, value: f(k[p.key]) }));
+  const rate = (x) => (x.v ? (x.c / x.v) * 100 : null);
+  const fmtRate = (x) => (x === null ? '–' : fmtNum(x, 1) + '%');
+  return html`<div class="grid kpis">
+    ${periodTile('Ziyaret', per((x) => x.v), main)}
+    ${periodTile('Tekil ziyaretçi', per((x) => x.u), main)}
+    ${periodTile('Tıklama', per((x) => x.c), main)}
+    ${periodTile('Tıklama oranı', per(rate), main, fmtRate)}
+  </div>`;
+}
+
+/** 24 saatlik histogram (İstanbul saati); hours: 24 elemanlı dizi */
+export function hourChart(hours) {
+  const max = Math.max(1, ...hours);
+  return html`<div class="hours" role="img" aria-label="Saate göre ziyaret">${hours.map((n, h) => html`<div title="${String(h).padStart(2, '0')}:00–${String(h).padStart(2, '0')}:59 · ${fmtNum(n)} ziyaret"><div class="b"><i class="${n ? '' : 'z'}" style="height:${n ? Math.max(3, Math.round((n / max) * 100)) : 2}%"></i></div><span>${h}</span></div>`)}</div>`;
 }
 
 export function kpiRow(t) {
