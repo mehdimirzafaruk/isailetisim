@@ -1,0 +1,8 @@
+# Cloudflare Workers static assets: yayınlanmayacak dosyalar
+worker/
+.git
+.gitignore
+*.md
+.nojekyll
+CNAME
+.DS_Store

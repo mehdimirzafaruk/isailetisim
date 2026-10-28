@@ -1,0 +1,4 @@
+# Yalnız yerel geliştirme içindir (wrangler dev okur). Canlıda `wrangler secret put` kullan.
+ADMIN_PASSWORD=yerel-sifre
+SESSION_SECRET=yerel-uzun-rastgele-dizi
+PURCHASE_KEY=yerel-postback-anahtari

@@ -1,0 +1,49 @@
+-- isailetisim influencer takibi: ilk şema
+CREATE TABLE IF NOT EXISTS influencers (
+  id         INTEGER PRIMARY KEY,
+  code       TEXT NOT NULL UNIQUE,
+  name       TEXT NOT NULL,
+  platform   TEXT,
+  note       TEXT,
+  target     TEXT NOT NULL DEFAULT '/',
+  active     INTEGER NOT NULL DEFAULT 1,
+  created_at INTEGER NOT NULL            -- unix ms
+);
+
+CREATE TABLE IF NOT EXISTS events (
+  id       INTEGER PRIMARY KEY,
+  ts       INTEGER NOT NULL,             -- unix ms
+  day      TEXT NOT NULL,                -- YYYY-MM-DD, Europe/Istanbul
+  type     TEXT NOT NULL CHECK (type IN ('visit','click','purchase')),
+  code     TEXT,                         -- influencer kodu; ref'siz olaylarda NULL
+  target   TEXT,                         -- click: mağaza adı; visit: yönlendirilen hedef
+  href     TEXT,
+  device   TEXT,                         -- mobile / tablet / desktop
+  browser  TEXT,                         -- Instagram in-app, TikTok in-app, Safari, Chrome...
+  ua       TEXT,
+  country  TEXT,
+  city     TEXT,
+  referer  TEXT,                         -- yalnız alan adı
+  ip_hash  TEXT,                         -- SHA-256(ip + SESSION_SECRET) kısaltılmış; ham IP tutulmaz (KVKK)
+  amount   REAL,
+  currency TEXT,
+  order_id TEXT,
+  source   TEXT,
+  note     TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_events_code_day ON events (code, day);
+CREATE INDEX IF NOT EXISTS idx_events_code_ts  ON events (code, ts);
+CREATE INDEX IF NOT EXISTS idx_events_type_day ON events (type, day);
+CREATE INDEX IF NOT EXISTS idx_events_order    ON events (order_id) WHERE order_id IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+  ip_hash TEXT NOT NULL,
+  ts      INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_login_attempts ON login_attempts (ip_hash, ts);
+
+CREATE TABLE IF NOT EXISTS unknown_hits (
+  code TEXT NOT NULL,
+  ts   INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_unknown_hits_ts ON unknown_hits (ts);

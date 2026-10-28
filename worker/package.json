@@ -1,0 +1,17 @@
+{
+  "name": "isailetisim-worker",
+  "version": "1.0.0",
+  "description": "isailetisim.com influencer takibi + admin paneli (Cloudflare Worker + D1)",
+  "scripts": {
+    "dev": "wrangler dev --local --port 8788",
+    "db:local": "wrangler d1 migrations apply isailetisim --local",
+    "db:remote": "wrangler d1 migrations apply isailetisim --remote",
+    "deploy": "wrangler deploy",
+    "test": "node test/unit.mjs"
+  },
+  "type": "module",
+  "devDependencies": {
+    "wrangler": "^4.154.0"
+  },
+  "private": true
+}

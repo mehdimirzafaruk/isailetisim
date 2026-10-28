@@ -359,7 +359,7 @@ a{color:inherit}
     <ul class="products">
 
       <!-- ÜRÜN 1: C11 Pro | fiyat: 5.999 ₺ | link sonundaki ?utm_... kısmını silme -->
-      <li><a class="product" data-t="urun-c11-pro" href="https://www.yasomi.com.tr/yasomi-c11-pro-16kpa-1800w-sicak-su-spreyli-buharli-temizleyici-hali-ve-koltuk-yikama-makinesi?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">
+      <li id="urun-c11-pro"><a class="product" data-t="urun-c11-pro" href="https://www.yasomi.com.tr/yasomi-c11-pro-16kpa-1800w-sicak-su-spreyli-buharli-temizleyici-hali-ve-koltuk-yikama-makinesi?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">
         <span class="product-img"><img src="assets/urun-c11-pro-400.webp" srcset="assets/urun-c11-pro-400.webp 400w, assets/urun-c11-pro-800.webp 800w" sizes="(min-width:720px) 140px, 50vw" width="400" height="400" alt="Yasomi C11 Pro halı ve koltuk yıkama makinesi" loading="lazy" decoding="async"></span>
         <span class="product-body">
           <span class="product-name">C11 Pro</span>
@@ -370,7 +370,7 @@ a{color:inherit}
       </a></li>
 
       <!-- ÜRÜN 2: Clean Force Pro | fiyat: 9.999 ₺ -->
-      <li><a class="product" data-t="urun-clean-force-pro" href="https://www.yasomi.com.tr/yasomi-clean-force-pro-dikey-hali-koltuk-yikama-ve-leke-cikarma-makinesi-135?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">
+      <li id="urun-clean-force-pro"><a class="product" data-t="urun-clean-force-pro" href="https://www.yasomi.com.tr/yasomi-clean-force-pro-dikey-hali-koltuk-yikama-ve-leke-cikarma-makinesi-135?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">
         <span class="product-img"><img src="assets/urun-clean-force-pro-400.webp" srcset="assets/urun-clean-force-pro-400.webp 400w, assets/urun-clean-force-pro-800.webp 800w" sizes="(min-width:720px) 140px, 50vw" width="400" height="400" alt="Yasomi Clean Force Pro dikey halı yıkama makinesi" loading="lazy" decoding="async"></span>
         <span class="product-body">
           <span class="product-name">Clean Force Pro</span>
@@ -381,7 +381,7 @@ a{color:inherit}
       </a></li>
 
       <!-- ÜRÜN 3: Witero 9in1 | fiyat: 7.599 ₺ -->
-      <li><a class="product" data-t="urun-witero" href="https://www.yasomi.com.tr/yasomi-witero-9in1-ultra-airwrap-multi-styler-sicak-soguk-hava-uflemeli-sac-sekillendirme-cihazi?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">
+      <li id="urun-witero"><a class="product" data-t="urun-witero" href="https://www.yasomi.com.tr/yasomi-witero-9in1-ultra-airwrap-multi-styler-sicak-soguk-hava-uflemeli-sac-sekillendirme-cihazi?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">
         <span class="product-img"><img src="assets/urun-witero-400.webp" srcset="assets/urun-witero-400.webp 400w, assets/urun-witero-800.webp 800w" sizes="(min-width:720px) 140px, 50vw" width="400" height="400" alt="Yasomi Witero 9in1 saç şekillendirme cihazı" loading="lazy" decoding="async"></span>
         <span class="product-body">
           <span class="product-name">Witero 9in1</span>
@@ -392,7 +392,7 @@ a{color:inherit}
       </a></li>
 
       <!-- ÜRÜN 4: Polish | fiyat: 11.999 ₺ -->
-      <li><a class="product" data-t="urun-polish" href="https://www.yasomi.com.tr/yasomi-polish-vacum-cleaner-islak-kuru-tam-koruma-buharli-temizleyici-137?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">
+      <li id="urun-polish"><a class="product" data-t="urun-polish" href="https://www.yasomi.com.tr/yasomi-polish-vacum-cleaner-islak-kuru-tam-koruma-buharli-temizleyici-137?utm_source=bio&amp;utm_medium=link&amp;utm_campaign=isailetisim" target="_blank" rel="noopener">
         <span class="product-img"><img src="assets/urun-polish-400.webp" srcset="assets/urun-polish-400.webp 400w, assets/urun-polish-800.webp 800w" sizes="(min-width:720px) 140px, 50vw" width="400" height="400" alt="Yasomi Polish ıslak-kuru buharlı temizleyici" loading="lazy" decoding="async"></span>
         <span class="product-body">
           <span class="product-name">Polish</span>
@@ -528,6 +528,29 @@ w.__ttqLoad=function(){ttq.load('D1AG6V3C77UC7904J7N0');ttq.page();};
     row.addEventListener('scroll',function(){if(!raf)raf=requestAnimationFrame(sync);},{passive:true});
     sync();
   }
+})();
+</script>
+<!-- isailetisim influencer takibi: index.html'de </body>'den hemen önce yapıştır -->
+<script>
+(function(){
+  var K='yref', RE=/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
+  function getC(){var m=document.cookie.match(/(?:^|;\s*)yref=([^;]+)/);return m?decodeURIComponent(m[1]):''}
+  var ref=(new URLSearchParams(location.search).get('ref')||'').toLowerCase();
+  if(RE.test(ref)){document.cookie=K+'='+ref+';max-age=2592000;path=/;samesite=lax'+(location.protocol==='https:'?';secure':'')}
+  else ref=getC();
+  if(!RE.test(ref))ref='';
+  // Influencer'dan gelindiyse yasomi.com.tr linklerine utm_content=<ref> ekle (Ticimax raporunda görünsün)
+  if(ref)[].forEach.call(document.querySelectorAll('a[href*="yasomi.com.tr"]'),function(a){
+    try{var u=new URL(a.href);if(/(^|\.)yasomi\.com\.tr$/.test(u.hostname)){u.searchParams.set('utm_content',ref);a.href=u.toString()}}catch(_){}
+  });
+  // Dışarı giden her tıklamayı /api/click'e bildir (sayfa kapansa da gider)
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('a[href^="http"]');if(!a)return;
+    var host='';try{host=new URL(a.href).hostname.replace(/^www\./,'')}catch(_){}
+    var body=JSON.stringify({target:a.dataset.track||a.dataset.t||host,ref:ref,href:a.href,page_ts:Date.now()});
+    try{if(navigator.sendBeacon&&navigator.sendBeacon('/api/click',new Blob([body],{type:'application/json'})))return}catch(_){}
+    try{fetch('/api/click',{method:'POST',body:body,keepalive:true,headers:{'Content-Type':'application/json'}})}catch(_){}
+  },{capture:true,passive:true});
 })();
 </script>
 </body>
