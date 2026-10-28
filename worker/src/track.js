@@ -174,7 +174,7 @@ export async function purchase(request, env) {
   }
   const body = await readJson(request);
   if (!body) return json({ ok: false, error: 'body' }, 400, cors);
-  const amount = parseAmount(body.amount);
+  const amount = Math.round(parseAmount(body.amount) * 100) / 100; // Ticimax 2598.9998 gibi gönderebiliyor
   if (!Number.isFinite(amount) || amount < 0 || amount > 10_000_000) return json({ ok: false, error: 'amount' }, 400, cors);
   const currency = /^[A-Za-z]{3}$/.test(body.currency || '') ? body.currency.toUpperCase() : 'TRY';
   const source = PURCHASE_SOURCES.includes(String(body.source || '').toLowerCase()) ? String(body.source).toLowerCase() : 'site';
