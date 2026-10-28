@@ -201,7 +201,7 @@ grep -q 'Sayfa görüntüleme (landing): <b>1</b>' $J && ok "influencer landing 
 curl -s -b $CK $B/admin/i/test/export.csv > $J
 check "influencer CSV'de view yok" "$(grep -c ';view;' $J)" 0
 # Beni sayma / Tekrar say
-check "ayarlar: kanal linkleri" "$(curl -s -b $CK $B/admin/settings | grep -o 'data-copy="[^"]*/\(ig\|tt\|fb\|x\|yt\|ln\|wa\|tg\)"' | wc -l | tr -d ' ')" 8
+check "ayarlar: kanal linkleri" "$(curl -s -b $CK $B/admin/settings | grep -o 'data-copy="[^"]*/\(instagram\|tiktok\|facebook\|x\|youtube\|linkedin\|whatsapp\|telegram\)"' | wc -l | tr -d ' ')" 8
 H=$(curl -s -b $CK -c $CK -D - -o /dev/null -X POST -H "Origin: $B" -d 'mode=on' $B/admin/settings/noview)
 echo "$H" | grep -i '^set-cookie:' | grep -q 'ynoview=1; Max-Age=31536000; Path=/' && ok "Beni sayma çerezi" || no "Beni sayma" "$(echo "$H" | grep -i set-cookie)"
 check "ayarlar: 'sayılmıyor' durumu" "$(curl -s -b $CK $B/admin/settings | grep -c 'Bu tarayıcı sayılmıyor')" 1
@@ -227,8 +227,8 @@ check "eski alan adı CORS preflight" "$(curl -s -D - -o /dev/null -X OPTIONS -H
 check "yasomi.net Host -> 200 (yönlenmez)" "$(code -H 'Host: yasomi.net' $B/)" 200
 check "www.yasomi.net -> apex 301" "$(loc -H 'Host: www.yasomi.net' "$B/a?b=1" | sed 's#^https\{0,1\}://##')" "yasomi.net/a?b=1"
 curl -s -b $CK $B/admin/settings > $J
-grep -q '<code>yasomi.net/ig</code>' $J && ok "ayarlar: yasomi.net/ig" || no "ayarlar yasomi.net/ig" "$(grep -o '<code>[^<]*/ig</code>' $J)"
-grep -q 'data-copy="https://yasomi.net/ig"' $J && ok "ayarlar: kopyala https://yasomi.net/ig" || no "ayarlar kopyala" "?"
+grep -q '<code>yasomi.net/instagram</code>' $J && ok "ayarlar: yasomi.net/instagram" || no "ayarlar yasomi.net/instagram" "$(grep -o '<code>[^<]*/instagram</code>' $J)"
+grep -q 'data-copy="https://yasomi.net/instagram"' $J && ok "ayarlar: kopyala https://yasomi.net/instagram" || no "ayarlar kopyala" "?"
 grep -q "fetch(&#39;https://yasomi.net/api/purchase&#39;\|fetch('https://yasomi.net/api/purchase'" $J && ok "ayarlar: Ticimax betiği yasomi.net" || no "Ticimax betiği" "$(grep -o 'fetch([^,]*' $J | head -2)"
 grep -q 'isailetisim.com/api/purchase adresi de çalışmaya devam eder' $J && ok "ayarlar: eski uç not" || no "eski uç not" "?"
 check "ayarlar: eski alan adı adres olarak geçmiyor" "$(grep -o 'https\{0,1\}://isailetisim.com[^ <\"&]*' $J | grep -vc 'isailetisim.com/api/purchase')" 0
