@@ -41,6 +41,7 @@ export const TYPE_LABELS = { visit: 'Ziyaret', click: 'Tıklama', purchase: 'Sat
 const CSS = `
 :root{--blue:#26B0DE;--btn:#157A9B;--btn-h:#0f6580;--text:#1F1F1F;--muted:#6B7378;--bg:#F6F8F9;--card:#fff;--line:#E3E8EB;--ok:#1E8E5A;--warn:#B4590B;--bad:#C0392B;--r:12px}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 Montserrat,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
 a{color:var(--btn)}
@@ -133,6 +134,41 @@ pre{background:#0F2730;color:#DDF3FA;padding:14px;border-radius:10px;overflow:au
 #inf td:first-child,#inf th:first-child{position:sticky;left:0;z-index:1;white-space:normal;min-width:130px;max-width:220px}
 #inf td:first-child{background:#fff}
 .nm small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.vault-strip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#E5F6EE;color:#155E3D;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600;margin-bottom:14px}
+.vault-strip svg{flex:none}
+.vault-strip span{flex:1;min-width:0}
+.vbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.vbar input[type=search]{flex:1 1 240px;width:auto}
+.vbar form{margin:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chips button{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:999px;padding:6px 12px;font:600 13px Montserrat,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.chips button b{font-weight:600;color:var(--muted);margin-left:4px}
+.chips button.on{background:var(--btn);border-color:var(--btn);color:#fff}
+.chips button.on b{color:#D5EEF6}
+.vault-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.vcard{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.vcard .hd{display:flex;align-items:center;gap:10px;min-width:0}
+.vcard .hd .t{min-width:0;flex:1}
+.vcard .hd b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.avatar{flex:none;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:17px}
+.vrow{display:flex;align-items:center;gap:8px;min-width:0;font-size:14px}
+.vrow .k{flex:none;width:22px;color:var(--muted);display:flex}
+.vrow .v{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vrow .v a{text-decoration:none}
+.vrow .btn.sm{padding:4px 9px;font-size:12px}
+.pw{font:600 14px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.04em;overflow-wrap:anywhere;white-space:normal}
+.vrow .v.pw{white-space:normal}
+.vacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.vnote{background:#FAFBFC;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
+.vempty{text-align:center;padding:40px 16px}
+.vlock{max-width:380px;margin:10vh auto 0;text-align:center}
+.vlock svg{color:var(--btn);margin-bottom:6px}
+.vlock form{text-align:left}
+.pwbox{display:flex;gap:6px}
+.pwbox input{flex:1}
+.vform{max-width:680px}
+@media (max-width:980px){.vault-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.vault-grid{grid-template-columns:1fr}.vbar input[type=search]{flex-basis:100%}.pwbox{flex-wrap:wrap}.pwbox input{flex-basis:100%}}
 @media (max-width:860px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.three{grid-template-columns:1fr}}
 @media (max-width:640px){.chan{grid-template-columns:1fr}.hm{display:none}.srct td.src{white-space:normal;min-width:96px}.hours span{visibility:hidden}.hours>div:nth-child(3n+1) span{visibility:visible}.chart svg.d,.d-i{display:none}.chart svg.m{display:block}.m-i{display:inline}
 th,td{padding:7px 6px;font-size:13px}th{font-size:11px}
@@ -158,22 +194,43 @@ document.addEventListener('click',function(e){
 document.addEventListener('submit',function(e){var m=e.target.getAttribute('data-confirm');if(m&&!confirm(m))e.preventDefault()});
 `;
 
-export function layout({ title, body, nav = '', loggedIn = true }) {
+/** Satır içi betikler için istek başına rastgele nonce (CSP script-src 'nonce-…'). */
+export function makeNonce() {
+  let s = '';
+  for (const b of crypto.getRandomValues(new Uint8Array(16))) s += String.fromCharCode(b);
+  return btoa(s);
+}
+
+/**
+ * Panelin CSP'si. Panelde satır içi olay işleyicisi (onclick vb.) yok; betikler yalnız nonce'lu <script> blokları.
+ * style-src 'unsafe-inline': şablonlardaki style="" öznitelikleri için (betik çalıştıramaz).
+ */
+export function panelCsp(nonce) {
+  return `default-src 'self'; script-src 'nonce-${nonce}'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; `
+    + "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'";
+}
+
+export function layout({ title, body, nav = '', loggedIn = true, nonce = '' }) {
   const link = (href, key, label) => html`<a href="${href}" class="${nav === key ? 'on' : ''}">${label}</a>`;
   const top = loggedIn
     ? html`<header class="top"><div class="in"><a class="brand" href="/admin"><i></i>Yasomi · Influencer</a>
-        <nav class="nav">${[link('/admin', 'home', 'Genel bakış'), link('/admin/ziyaretciler', 'views', 'Ziyaretçiler'), link('/admin/new', 'new', 'Yeni link'), link('/admin/settings', 'settings', 'Ayarlar')]}</nav></div></header>`
+        <nav class="nav">${[link('/admin', 'home', 'Genel bakış'), link('/admin/ziyaretciler', 'views', 'Ziyaretçiler'), link('/admin/new', 'new', 'Yeni link'), link('/admin/kasa', 'vault', 'Kasa'), link('/admin/settings', 'settings', 'Ayarlar')]}</nav></div></header>`
     : raw('');
+  // Gövdedeki gerçek <script> etiketlerine nonce eklenir. Kullanıcı metni html`` ile kaçışlandığı için (&lt;script&gt;) eşleşmez.
+  const sTag = nonce ? `<script nonce="${esc(nonce)}">` : '<script>';
+  const bodyStr = String(body).replace(/<script>/g, sTag);
   return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>${esc(title)} · Yasomi Influencer</title>
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
-<style>${CSS}</style></head><body>${top}<main>${body}</main><script>${JS}</script></body></html>`;
+<style>${CSS}</style></head><body>${top}<main>${bodyStr}</main>${sTag}${JS}</script></body></html>`;
 }
 
+/** Panel sayfası. Her yanıt kendi nonce'unu ve CSP'sini alır (tüm panel sayfaları). */
 export function page(opts, status = 200, headers = {}) {
-  return new Response(layout(opts), {
+  const nonce = makeNonce();
+  return new Response(layout({ ...opts, nonce }), {
     status,
     headers: {
       'content-type': 'text/html; charset=utf-8',
@@ -181,6 +238,7 @@ export function page(opts, status = 200, headers = {}) {
       'x-robots-tag': 'noindex, nofollow',
       'x-content-type-options': 'nosniff',
       'referrer-policy': 'same-origin',
+      'content-security-policy': panelCsp(nonce),
       ...headers,
     },
   });

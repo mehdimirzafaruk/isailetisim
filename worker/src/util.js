@@ -152,6 +152,13 @@ export function json(data, status = 200, headers = {}) {
   });
 }
 
+/** 303 yönlendirme. headers değeri dizi olabilir (birden çok set-cookie). */
+export function see(location, headers = {}) {
+  const h = new Headers({ location, 'cache-control': 'no-store' });
+  for (const [k, v] of Object.entries(headers)) for (const x of [].concat(v)) h.append(k, x);
+  return new Response(null, { status: 303, headers: h });
+}
+
 // ---------------------------------------------------------------- alan adı
 // 28 Ekim 2026: kanonik adres yasomi.net (wrangler.toml [vars] SITE_ORIGIN). Eski alan adı 301 ile buraya gider (/api hariç).
 export const DEFAULT_SITE_ORIGIN = 'https://yasomi.net';

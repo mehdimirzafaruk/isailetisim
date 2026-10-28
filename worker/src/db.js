@@ -256,3 +256,48 @@ export async function allViews(db, from) {
   const r = await db.prepare("SELECT * FROM events WHERE type = 'view' AND day >= ? ORDER BY ts DESC, id DESC").bind(from || NO_FROM).all();
   return r.results || [];
 }
+
+// ---------- şifre kasası ----------
+// password_enc / note_enc şifreli metindir; çözme src/vault.js'te. Liste sorgusu şifreli alanları hiç döndürmez.
+const VAULT_COLS = ['title', 'url', 'username', 'email', 'phone', 'category', 'password_enc', 'note_enc'];
+
+export async function listVaultEntries(db) {
+  const r = await db.prepare(`SELECT uid, title, url, username, email, phone, category,
+      password_enc IS NOT NULL AS has_pw, note_enc IS NOT NULL AS has_note, created_at, updated_at FROM vault_entries`).all();
+  return r.results || [];
+}
+
+export async function getVaultEntry(db, uid) {
+  return db.prepare('SELECT * FROM vault_entries WHERE uid = ?').bind(uid).first();
+}
+
+export async function allVaultEntries(db) {
+  const r = await db.prepare('SELECT * FROM vault_entries').all();
+  return r.results || [];
+}
+
+export async function createVaultEntry(db, uid, e) {
+  const now = Date.now();
+  await db.prepare(`INSERT INTO vault_entries (uid, ${VAULT_COLS.join(', ')}, created_at, updated_at) VALUES (?, ${VAULT_COLS.map(() => '?').join(', ')}, ?, ?)`)
+    .bind(uid, ...VAULT_COLS.map((c) => e[c] ?? null), now, now).run();
+}
+
+export async function updateVaultEntry(db, uid, e) {
+  await db.prepare(`UPDATE vault_entries SET ${VAULT_COLS.map((c) => `${c} = ?`).join(', ')}, updated_at = ? WHERE uid = ?`)
+    .bind(...VAULT_COLS.map((c) => e[c] ?? null), Date.now(), uid).run();
+}
+
+export async function deleteVaultEntry(db, uid) {
+  const r = await db.prepare('DELETE FROM vault_entries WHERE uid = ?').bind(uid).run();
+  return (r.meta?.changes ?? 0) > 0;
+}
+
+export async function addVaultAudit(db, { action, entry_uid = null, title = null, ip_hash = null }) {
+  await db.prepare('INSERT INTO vault_audit (ts, action, entry_uid, title, ip_hash) VALUES (?, ?, ?, ?, ?)')
+    .bind(Date.now(), action, entry_uid, title, ip_hash).run();
+}
+
+export async function recentVaultAudit(db, limit = 15) {
+  const r = await db.prepare('SELECT * FROM vault_audit ORDER BY ts DESC, id DESC LIMIT ?').bind(limit).all();
+  return r.results || [];
+}

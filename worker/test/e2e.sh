@@ -240,6 +240,67 @@ check "/admin/ziyaretciler metni yasomi.net" "$(curl -s -b $CK $B/admin/ziyaretc
 check "statik canonical yasomi.net" "$(curl -s $B/ | grep -c '<link rel="canonical" href="https://yasomi.net/">')" 1
 check "robots.txt sitemap yasomi.net" "$(curl -s $B/robots.txt | grep -c 'Sitemap: https://yasomi.net/sitemap.xml')" 1
 
+# 11) Şifre kasası (/admin/kasa): ikinci kilit, şifreli saklama, göster, indir
+q "DELETE FROM vault_entries; DELETE FROM vault_audit; DELETE FROM login_attempts" >/dev/null
+VPW='Kasa-Test-Sifre!42'
+H=$(curl -s -b $CK -D - -o $J $B/admin/kasa)
+check "kasa kilitli sayfa 200" "$(echo "$H" | head -1 | awk '{print $2}')" 200
+check "kasa kilitli metni" "$(grep -c '<h1>Kasa kilitli</h1>' $J)" 1
+echo "$H" | grep -i '^content-security-policy:' | grep -q "script-src 'nonce-" && ok "kasa CSP nonce" || no "kasa CSP" "$(echo "$H" | grep -i content-security)"
+N=$(echo "$H" | grep -i '^content-security-policy:' | grep -o "nonce-[A-Za-z0-9+/=]*" | cut -d- -f2)
+check "betikler nonce'lu" "$(grep -o '<script[^>]*>' $J | grep -vc "nonce=\"$N\"")" 0
+check "kilitliyken yeni kayıt POST -> 403" "$(curl -s -b $CK -o /dev/null -w '%{http_code}' -X POST -H "Origin: $B" -d 'title=X&password=y' $B/admin/kasa/yeni)" 403
+check "kilitliyken JSON hata" "$(curl -s -b $CK -X POST -H "Origin: $B" $B/admin/kasa/indir | grep -c '"error":"locked"')" 1
+check "kilitliyken kayıt yazılmadı" "$(q 'SELECT COUNT(*) FROM vault_entries')" 0
+check "kasa yanlış şifre -> 401" "$(curl -s -b $CK -o /dev/null -w '%{http_code}' -X POST -H "Origin: $B" -d 'password=yanlis' $B/admin/kasa/ac)" 401
+H=$(curl -s -b $CK -c $CK -D - -o /dev/null -X POST -H "Origin: $B" --data-urlencode "password=$PW" -d 'next=/admin/kasa' $B/admin/kasa/ac)
+check "kasa aç -> 303" "$(echo "$H" | head -1 | awk '{print $2}')" 303
+echo "$H" | grep -i '^set-cookie:' | grep -q 'yvault=v1\..*Max-Age=900; Path=/admin/kasa; HttpOnly; Secure; SameSite=Strict' && ok "yvault çerezi 15 dk" || no "yvault" "$(echo "$H" | grep -i set-cookie)"
+check "açık kasa listesi" "$(curl -s -b $CK $B/admin/kasa | grep -c 'Kasa açık · 15 dakika sonra kendini kilitler')" 1
+check "boş kasa durumu" "$(curl -s -b $CK $B/admin/kasa | grep -c 'İlk kaydı ekle')" 1
+check "yeni kayıt formu 200" "$(curl -s -b $CK -o /dev/null -w '%{http_code}' $B/admin/kasa/yeni)" 200
+check "başlıksız kayıt -> 400" "$(curl -s -b $CK -o /dev/null -w '%{http_code}' -X POST -H "Origin: $B" -d 'title=&password=x' $B/admin/kasa/yeni)" 400
+check "geçersiz URL -> 400" "$(curl -s -b $CK -o /dev/null -w '%{http_code}' -X POST -H "Origin: $B" -d 'title=X&url=javascript%3Aalert(1)&password=x' $B/admin/kasa/yeni)" 400
+check "hatalı formda şifre geri gelmez" "$(curl -s -b $CK -X POST -H "Origin: $B" -d 'title=&password=GeriGelmesin' $B/admin/kasa/yeni | grep -c 'GeriGelmesin')" 0
+check "kayıt ekle -> 303" "$(curl -s -b $CK -o /dev/null -w '%{http_code}' -X POST -H "Origin: $B" --data-urlencode 'title=Trendyol <b>Satıcı</b>' -d 'url=partner.trendyol.com&username=yasomi&email=info%40yasomi.com.tr&phone=0532&category=pazaryeri' --data-urlencode "password=$VPW" --data-urlencode 'note=2FA Mirza telefonunda' $B/admin/kasa/yeni)" 303
+check "kayıt sayısı" "$(q 'SELECT COUNT(*) FROM vault_entries')" 1
+check "DB'de şifre düz metin değil" "$(q "SELECT COUNT(*) FROM vault_entries WHERE password_enc LIKE '%Kasa-Test%' OR note_enc LIKE '%2FA%'")" 0
+check "URL https eklendi" "$(q 'SELECT url FROM vault_entries')" "https://partner.trendyol.com/"
+UID_=$(q 'SELECT uid FROM vault_entries')
+curl -s -b $CK $B/admin/kasa > $J
+check "listede şifre YOK" "$(grep -c -- "$VPW" $J)" 0
+check "listede not YOK" "$(grep -c '2FA Mirza' $J)" 0
+grep -q 'Trendyol &lt;b&gt;Satıcı&lt;/b&gt;' $J && ok "kasa başlığı kaçışlandı" || no "kasa kaçış" "?"
+grep -q "data-uid=\"$UID_\"" $J && ok "kart listede" || no "kart" "?"
+G=$(curl -s -b $CK -X POST -H "Origin: $B" $B/admin/kasa/$UID_/goster)
+echo "$G" | grep -q "\"password\":\"$VPW\"" && ok "goster JSON şifreyi döner" || no "goster" "$G"
+echo "$G" | grep -q '"note":"2FA Mirza telefonunda"' && ok "goster notu döner" || no "goster not" "$G"
+check "goster audit" "$(q "SELECT COUNT(*) FROM vault_audit WHERE action='reveal'")" 1
+check "düzenle formunda şifre yok" "$(curl -s -b $CK $B/admin/kasa/$UID_ | grep -c -- "$VPW")" 0
+check "düzenle: boş şifre -> 303" "$(curl -s -b $CK -o /dev/null -w '%{http_code}' -X POST -H "Origin: $B" -d 'title=Trendyol&url=&category=pazaryeri&password=&note=yeni+not' $B/admin/kasa/$UID_)" 303
+G=$(curl -s -b $CK -X POST -H "Origin: $B" $B/admin/kasa/$UID_/goster)
+echo "$G" | grep -q "\"password\":\"$VPW\"" && echo "$G" | grep -q '"note":"yeni not"' && ok "boş şifre aynı kaldı, not güncellendi" || no "düzenle" "$G"
+curl -s -b $CK -D $J.h -o $J -X POST -H "Origin: $B" $B/admin/kasa/indir
+grep -qi "content-disposition: attachment; filename=\"yasomi-sifreler-[0-9-]*\.txt\"" $J.h && ok "indir Content-Disposition" || no "indir başlık" "$(grep -i content-disp $J.h)"
+grep -qi 'content-type: text/plain; charset=utf-8' $J.h && ok "indir text/plain" || no "indir tür" "$(grep -i content-type $J.h)"
+grep -q -- "  Şifre      : $VPW" $J && ok "indir şifreyi içerir" || no "indir şifre" "$(head -12 $J)"
+grep -q '=== Pazaryeri ===' $J && ok "indir kategori başlığı" || no "indir kategori" "?"
+check "export audit" "$(q "SELECT COUNT(*) FROM vault_audit WHERE action='export'")" 1
+check "bilinmeyen uid -> 404" "$(curl -s -b $CK -o /dev/null -w '%{http_code}' $B/admin/kasa/0000000000000000)" 404
+H=$(curl -s -b $CK -c $CK -D - -o /dev/null -X POST -H "Origin: $B" $B/admin/kasa/kilitle)
+echo "$H" | grep -i '^set-cookie:' | grep -q 'yvault=; Max-Age=0' && ok "kilitle çerezi siler" || no "kilitle" "$(echo "$H" | grep -i set-cookie)"
+check "kilitledikten sonra tekrar kilitli" "$(curl -s -b $CK $B/admin/kasa | grep -c '<h1>Kasa kilitli</h1>')" 1
+check "kilitliyken goster -> 403" "$(curl -s -b $CK -o /dev/null -w '%{http_code}' -X POST -H "Origin: $B" $B/admin/kasa/$UID_/goster)" 403
+curl -s -b $CK -c $CK -o /dev/null -X POST -H "Origin: $B" --data-urlencode "password=$PW" $B/admin/kasa/ac
+check "sil -> 303" "$(curl -s -b $CK -o /dev/null -w '%{http_code}' -X POST -H "Origin: $B" $B/admin/kasa/$UID_/sil)" 303
+check "silindi" "$(q 'SELECT COUNT(*) FROM vault_entries')" 0
+check "audit: unlock 2, create 1, update 1, delete 1" "$(q "SELECT SUM(action='unlock') || '/' || SUM(action='create') || '/' || SUM(action='update') || '/' || SUM(action='delete') FROM vault_audit")" "2/1/1/1"
+H=$(curl -s -b $CK -D - -o /dev/null $B/admin)
+echo "$H" | grep -i '^content-security-policy:' | grep -q "script-src 'nonce-" && ok "CSP tüm panelde" || no "panel CSP" "?"
+H=$(curl -s -b $CK -c $CK -D - -o /dev/null -X POST $B/admin/logout)
+echo "$H" | grep -i '^set-cookie:' | grep -q 'yvault=; Max-Age=0' && ok "çıkış yvault'ı da siler" || no "çıkış yvault" "$(echo "$H" | grep -i set-cookie)"
+curl -s -b $CK -c $CK -o /dev/null -X POST --data-urlencode "password=$PW" $B/admin/login
+
 check "çıkış -> 303" "$(curl -s -b $CK -c $CK -o /dev/null -w '%{http_code}' -X POST $B/admin/logout)" 303
 check "çıkıştan sonra giriş sayfası" "$(curl -s -b $CK $B/admin | grep -c 'name="password"')" 1
 

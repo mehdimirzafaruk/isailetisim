@@ -13,12 +13,13 @@ Veritabanı D1. Panel `/admin`. Derleme adımı yok, framework yok.
 | `/` | Bio sayfası. Her açılış arkada `view` olayı olarak yazılır (aşağıda **Ziyaretçi sayacı**). |
 | `/ig` `/tt` `/fb` `/x` `/yt` `/ln` `/wa` `/tg` | Kanal linki: 302 ile `/?s=<kısa>`'ya gider; ziyaret o kanala yazılır. |
 | `/admin` | Türkçe panel: genel bakış, ziyaretçiler, yeni link, influencer detayı, CSV, elle satış girişi, ayarlar. |
+| `/admin/kasa` | Şifre kasası: ekibin platform şifreleri, AES-256-GCM ile şifreli; ayrı 15 dk kilit (aşağıda **Şifre kasası**). |
 | geri kalan her şey | `../` klasöründeki statik bio sitesi (`index.html`, `assets/`). Olmayan yol 404. |
 
 Dosyalar: `src/index.js` yönlendirici · `src/track.js` takip uçları · `src/admin.js` panel ·
-`src/db.js` SQL · `src/html.js` şablon ve stil · `src/auth.js` giriş/oturum · `src/util.js` yardımcılar ·
+`src/db.js` SQL · `src/html.js` şablon ve stil · `src/auth.js` giriş/oturum/kasa kilidi · `src/vault.js` şifre kasası · `src/util.js` yardımcılar ·
 `src/sources.js` ziyaret kaynağı tespiti · `src/snippets.js` Ticimax betiği · `migrations/` şema
-(`schema.sql` iki migration'ın sonucu) · `bio-snippet.html` index.html'e eklenecek betik · `test/` testler
+(`schema.sql` migration'ların sonucu) · `bio-snippet.html` index.html'e eklenecek betik · `test/` testler
 (`test/seed.sql` yerel örnek veri).
 
 ## Canlıya alma (bir kez)
@@ -34,6 +35,7 @@ Komutların hepsi `worker/` klasöründe çalışır.
    npx wrangler secret put ADMIN_PASSWORD     # panel şifresi
    npx wrangler secret put SESSION_SECRET     # uzun rastgele dizi: openssl rand -hex 32
    npx wrangler secret put PURCHASE_KEY       # postback anahtarı: openssl rand -hex 16
+   npx wrangler secret put VAULT_KEY          # şifre kasası anahtarı: openssl rand -base64 32 (aşağıda Şifre kasası)
    ```
 5. Alan adı: `yasomi.net` ve (eski) `isailetisim.com` zone'ları Cloudflare hesabında olmalı. `wrangler.toml` içindeki
    `routes` dördünü de custom domain olarak tanımlar (apex + www, iki alan adı). Apex'te başka A/CNAME kaydı
@@ -250,6 +252,66 @@ denemesi sınırı için. Tarayıcı kimliği (UA) 300 karaktere kırpılır, re
 `SESSION_SECRET` değişirse eski hash'ler eşleşmez (sorun değil, yalnız 30 sn'lik tekilleştirme etkilenir) ve
 tüm panel oturumları düşer.
 
+## Şifre kasası (/admin/kasa)
+
+Ekibin bütün şifreleri tek yerde: pazaryeri panelleri, sosyal hesaplar, reklam hesapları, mail, banka/ödeme,
+sunucu/alan adı. Kayıt alanları: platform/site adı, URL, kullanıcı adı, e-posta, telefon, şifre, kategori, not.
+Panelde **Kasa** sekmesi.
+
+**Nasıl korunur**
+
+- Şifre ve not **AES-256-GCM** ile şifreli saklanır (`vault_entries.password_enc`, `note_enc`). Her alan kendi rastgele
+  12 baytlık IV'siyle şifrelenir; kaydın `uid`'i ek doğrulama verisi (AAD) olarak bağlıdır, şifreli metin başka satıra
+  kopyalanırsa çözülmez. Başlık, URL, kullanıcı adı, e-posta, telefon aramada kullanıldığı için düz metin.
+- Anahtar Worker secret'ı `VAULT_KEY` (32 bayt, base64). Kodda, D1'de, git'te yok. Tanımlı değilse kasa sayfaları
+  503 "Kurulum eksik: VAULT_KEY" verir; panelin geri kalanı çalışır.
+- **İkinci kilit:** panel oturumu 7 gün sürer, kasa ayrıca panel şifresini tekrar ister ve **15 dakika** açık kalır
+  (`yvault` çerezi: HMAC imzalı, `Path=/admin/kasa; HttpOnly; Secure; SameSite=Strict`, süre uzamaz). Süre dolunca
+  liste sayfası kendini yeniler ve kilit ekranına düşer. **Kilitle** düğmesi ve panelden çıkış kasayı hemen kilitler.
+  `ADMIN_PASSWORD` ya da `VAULT_KEY` değişince açık kasalar kilitlenir.
+- Kilit ekranında da giriş sayfasıyla aynı hız sınırı: IP başına 10 dakikada 10 deneme (sayaç ortak).
+- Şifre ve not liste HTML'inde yoktur. **Göster** / **Şifreyi kopyala** ayrı bir POST ile alır; gösterilen şifre
+  30 saniye sonra kendiliğinden gizlenir. Düzenleme formunda şifre alanı boş gelir (boş bırakılırsa aynı kalır).
+- Hareket kaydı (`vault_audit`): kasa açma, ekleme, güncelleme, silme, gösterme/kopyalama, toplu indirme; zaman,
+  kayıt başlığı ve IP özeti (ham IP yok). Son 15 hareket listenin altında **Son hareketler**'de.
+- Panel sayfaları sıkı CSP ile gelir (betikler istek başına nonce'lu, `frame-ancestors 'none'`, `form-action 'self'`).
+  Şifre ve not hiçbir yerde loglanmaz.
+
+**Kurulum (bir kez)**
+
+```
+openssl rand -base64 32                          # çıkan değeri kopyala
+security add-generic-password -a isailetisim -s panel-vault-key -w '<değer>'   # Mac anahtarlığına yedek
+npx wrangler secret put VAULT_KEY                # sorulunca aynı değeri yapıştır
+npx wrangler d1 migrations apply isailetisim --remote   # 0003_vault: önce şema
+npx wrangler deploy                                     # sonra kod
+```
+
+Sıra önemli: önce migration, sonra deploy. Ters sırada kasa sayfaları tablo bulunamadı hatası verir (panelin geri
+kalanı etkilenmez).
+
+> **VAULT_KEY kaybolursa kasa geri gelmez.** Cloudflare secret'ı geri okunamaz; tek yedek Mac anahtarlığı:
+> `security find-generic-password -a isailetisim -s panel-vault-key -w`
+> Anahtarı değiştirmek (rotasyon) şifreli kayıtları okunmaz yapar: önce **Tümünü indir**, sonra yeni anahtar, sonra
+> kayıtları yeniden gir. Toplu yeniden şifreleme aracı yok.
+
+**Tümünü indir (.txt)**: bütün kayıtlar çözülmüş, kategoriye göre gruplu, başlığa göre sıralı düz metin
+(`yasomi-sifreler-YYYY-MM-DD.txt`). Dosya şifresizdir: işin bitince sil, paylaşma. Her indirme hareket kaydına düşer.
+
+| Rota | İş |
+|---|---|
+| `GET /admin/kasa` | Liste: arama, kategori çipleri, kartlar, son hareketler. Kilitliyse kilit ekranı. |
+| `POST /admin/kasa/ac` | Kasayı aç (`password`, `next`); 15 dk `yvault` çerezi. |
+| `POST /admin/kasa/kilitle` | Kasayı kilitle. |
+| `GET/POST /admin/kasa/yeni` | Yeni kayıt formu (şifre **Üret**: 20 karakter, harf + rakam + sembol). |
+| `GET/POST /admin/kasa/<uid>` | Düzenle. |
+| `POST /admin/kasa/<uid>/sil` | Sil. |
+| `POST /admin/kasa/<uid>/goster` | JSON `{ok, password, note}`. |
+| `POST /admin/kasa/indir` | Tümünü düz metin indir. |
+
+Kasa kilitliyken POST istekleri 403 JSON `{ok:false,error:"locked"}` alır (tarayıcı formu gönderdiyse kilit ekranına
+303). Yerel testte `.dev.vars`'a `VAULT_KEY=<openssl rand -base64 32>` ekle.
+
 ## Güvenlik
 
 - Panel: tek şifre (`ADMIN_PASSWORD`), HMAC imzalı 7 günlük çerez (`HttpOnly; Secure; SameSite=Lax; Path=/admin`).
@@ -257,6 +319,8 @@ tüm panel oturumları düşer.
 - Giriş denemesi: IP başına 10 dakikada 10 deneme; 11.'si 429.
 - Panel formları başka siteden gönderilemez (Origin kontrolü + SameSite çerez).
 - Kullanıcıdan gelen her metin HTML'de kaçışlanır.
+- Panelin tüm HTML sayfalarında CSP: satır içi betikler istek başına nonce ister, başka kaynaktan betik yüklenmez.
+- Şifre kasası ayrıca 15 dakikalık ikinci kilit ve AES-256-GCM kullanır (yukarıda **Şifre kasası**).
 
 ## Yerel geliştirme
 

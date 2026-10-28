@@ -2,3 +2,4 @@
 ADMIN_PASSWORD=yerel-sifre
 SESSION_SECRET=yerel-uzun-rastgele-dizi
 PURCHASE_KEY=yerel-postback-anahtari
+VAULT_KEY=yerelde-openssl-rand-base64-32-ciktisi

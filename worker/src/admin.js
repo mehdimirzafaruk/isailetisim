@@ -1,16 +1,16 @@
 // /admin paneli: sunucu tarafında üretilen Türkçe HTML.
 import * as db from './db.js';
-import { isLoggedIn, attemptLogin, clearSessionCookie, authConfigured } from './auth.js';
+import { isLoggedIn, attemptLogin, clearSessionCookie, clearVaultCookie, authConfigured } from './auth.js';
 import { html, raw, esc, page, layout, kpiRow, chartBlock, viewKpiRow, hourChart, fmtNum, fmtTRY, pct, PLATFORMS, SOURCE_LABELS, DEVICE_LABELS, TYPE_LABELS } from './html.js';
-import { isValidCode, slugify, normalizeTarget, parseAmount, clip, dayOf, daysAgo, fmtDateTime, fmtDay, noonOfDay, parseCookies, RESERVED_CODES, CHANNELS, DAY_MS, siteOrigin, siteHost } from './util.js';
+import { isValidCode, slugify, normalizeTarget, parseAmount, clip, dayOf, daysAgo, fmtDateTime, fmtDay, noonOfDay, parseCookies, RESERVED_CODES, CHANNELS, DAY_MS, siteOrigin, siteHost, see } from './util.js';
 import { PURCHASE_SOURCES, NOVIEW_COOKIE } from './track.js';
 import { trafficLabel } from './sources.js';
 import { ticimaxSnippets } from './snippets.js';
+import { handleVault } from './vault.js';
 
 const PER_PAGE = 100;
 
 const linkFor = (env, code) => `${siteOrigin(env)}/i/${code}`;
-const see = (location, headers = {}) => new Response(null, { status: 303, headers: { location, 'cache-control': 'no-store', ...headers } });
 
 export async function handleAdmin(request, env, ctx, url) {
   const path = url.pathname.replace(/\/+$/, '') || '/admin';
@@ -28,7 +28,7 @@ export async function handleAdmin(request, env, ctx, url) {
   }
 
   if (path === '/admin/login' && method === 'POST') return login(request, env);
-  if (path === '/admin/logout' && method === 'POST') return see('/admin', { 'set-cookie': clearSessionCookie() });
+  if (path === '/admin/logout' && method === 'POST') return see('/admin', { 'set-cookie': [clearSessionCookie(), clearVaultCookie()] });
 
   if (!(await isLoggedIn(request, env))) {
     if (method !== 'GET') return see('/admin');
@@ -41,6 +41,8 @@ export async function handleAdmin(request, env, ctx, url) {
   if (path === '/admin/settings/noview' && method === 'POST') return setNoView(request);
   if (path === '/admin/ziyaretciler' && method === 'GET') return visitorsPage(env, url);
   if (path === '/admin/ziyaretciler/export.csv' && method === 'GET') return exportViewsCsv(env, url);
+  // Şifre kasası: kendi kilidi (yvault) ve rotaları vault.js'te.
+  if (path === '/admin/kasa' || path.startsWith('/admin/kasa/')) return handleVault(request, env, url, path);
 
   const m = path.match(/^\/admin\/i\/([a-z0-9-]{1,40})(\/.*)?$/);
   if (m) {

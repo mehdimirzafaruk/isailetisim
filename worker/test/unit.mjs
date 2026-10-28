@@ -2,7 +2,9 @@
 import assert from 'node:assert/strict';
 import * as u from '../src/util.js';
 import { esc, html, fmtNum, fmtTRY, barChart, chartBlock } from '../src/html.js';
-import { createSessionCookie, verifySessionValue, safeEqual } from '../src/auth.js';
+import { createSessionCookie, verifySessionValue, safeEqual, createVaultCookie, verifyVaultValue, VAULT_MS } from '../src/auth.js';
+import { encryptField, decryptField, vaultConfigured, buildExportText, normalizeVaultUrl } from '../src/vault.js';
+import { layout, page } from '../src/html.js';
 import { buildLocation } from '../src/track.js';
 import { detectSource, sourceFromTag, sourceFromReferer, trafficLabel } from '../src/sources.js';
 import { ticimaxSnippets } from '../src/snippets.js';
@@ -169,5 +171,98 @@ await t('barChart', () => {
   assert.ok(svg.startsWith('<svg'));
   assert.equal((String(chartBlock(s)).match(/<svg/g) || []).length, 2);
   assert.ok(svg.includes('<rect'));
+});
+// ---------- şifre kasası
+const b64 = (bytes) => btoa(String.fromCharCode(...bytes));
+const venv = { VAULT_KEY: b64(crypto.getRandomValues(new Uint8Array(32))), SESSION_SECRET: 's', ADMIN_PASSWORD: 'p' };
+await t('vault: yapılandırma', () => {
+  assert.ok(vaultConfigured(venv));
+  assert.ok(!vaultConfigured({}));
+  assert.ok(!vaultConfigured({ VAULT_KEY: b64(new Uint8Array(16)) }), '16 bayt yetmez');
+  assert.ok(!vaultConfigured({ VAULT_KEY: '***' }));
+});
+await t('vault: şifrele / çöz', async () => {
+  const uid = '0123456789abcdef';
+  const blob = await encryptField(venv, uid, 'Gizli şifre 🔑 çğıöşü');
+  assert.match(blob, /^[A-Za-z0-9_-]+$/, 'base64url');
+  assert.ok(!blob.includes('Gizli'));
+  assert.equal(await decryptField(venv, uid, blob), 'Gizli şifre 🔑 çğıöşü');
+  assert.notEqual(await encryptField(venv, uid, 'x'), await encryptField(venv, uid, 'x'), 'her seferinde yeni IV');
+  await assert.rejects(decryptField(venv, 'fedcba9876543210', blob), 'farklı uid (AAD) ile çözülmez');
+  const other = { ...venv, VAULT_KEY: b64(crypto.getRandomValues(new Uint8Array(32))) };
+  await assert.rejects(decryptField(other, uid, blob), 'farklı anahtar ile çözülmez');
+  const bytes = blob.slice(0, -4) + (blob.endsWith('AAAA') ? 'BBBB' : 'AAAA');
+  await assert.rejects(decryptField(venv, uid, bytes), 'bozuk veri');
+  await assert.rejects(decryptField(venv, uid, 'abc'), 'çok kısa');
+  assert.equal(await encryptField(venv, uid, ''), null);
+  assert.equal(await encryptField(venv, uid, null), null);
+  assert.equal(await decryptField(venv, uid, null), '');
+});
+await t('vault: kilit çerezi', async () => {
+  const now = Date.now();
+  const c = await createVaultCookie(venv, now);
+  assert.match(c, /^yvault=v1\./);
+  assert.ok(c.includes('Max-Age=900; Path=/admin/kasa; HttpOnly; Secure; SameSite=Strict'));
+  const val = c.split(';')[0].split('=')[1];
+  assert.equal(await verifyVaultValue(venv, val, now), now + VAULT_MS);
+  assert.ok(await verifyVaultValue(venv, val, now + VAULT_MS - 1000), '15 dk dolmadan açık');
+  assert.equal(await verifyVaultValue(venv, val, now + VAULT_MS + 1), false, 'süresi dolunca kilitli');
+  assert.equal(await verifyVaultValue({ ...venv, VAULT_KEY: b64(new Uint8Array(32)) }, val, now), false, 'farklı VAULT_KEY');
+  assert.equal(await verifyVaultValue({ ...venv, ADMIN_PASSWORD: 'yeni' }, val, now), false, 'şifre değişince kilitlenir');
+  assert.equal(await verifyVaultValue(venv, val.slice(0, -2) + 'xx', now), false, 'imza bozuk');
+  const sess = (await createSessionCookie(venv, now)).split(';')[0].split('=')[1];
+  assert.equal(await verifyVaultValue(venv, sess, now), false, 'panel oturum çerezi kasayı açmaz');
+  assert.equal(await verifyVaultValue(venv, '', now), false);
+});
+await t('vault: URL doğrulama', () => {
+  assert.equal(normalizeVaultUrl(''), '');
+  assert.equal(normalizeVaultUrl('https://partner.trendyol.com'), 'https://partner.trendyol.com/');
+  assert.equal(normalizeVaultUrl('partner.trendyol.com/giris'), 'https://partner.trendyol.com/giris');
+  assert.equal(normalizeVaultUrl('javascript:alert(1)'), null);
+  assert.equal(normalizeVaultUrl('ftp://x.com'), null);
+  assert.equal(normalizeVaultUrl('düz metin'), null);
+});
+await t('vault: buildExportText', () => {
+  const now = Date.parse('2026-10-28T15:40:00Z'); // İstanbul 18:40
+  const upd = Date.parse('2026-10-28T15:12:00Z');
+  const txt = buildExportText([
+    { title: 'Trendyol', url: 'https://partner.trendyol.com', username: 'yasomi', email: 'info@yasomi.com.tr', phone: '0532 000 00 00', password: 'Ş1fre!', note: 'satır 1\nsatır 2', category: 'pazaryeri', updated_at: upd },
+    { title: 'Instagram', username: 'yasomi', password: 'ig-pw', note: '', category: 'sosyal', updated_at: upd },
+    { title: 'Amazon', password: 'amz', category: 'pazaryeri', updated_at: upd },
+    { title: 'Bozuk', password: null, category: 'tanimsiz', updated_at: upd },
+  ], now);
+  const lines = txt.split('\n');
+  assert.equal(lines[0], 'Yasomi şifre kasası — 28.10.2026 18:40 (İstanbul)');
+  assert.equal(lines[1], 'Toplam 4 kayıt. Bu dosya düz metindir; işin bitince sil.');
+  assert.equal(lines[2], '');
+  assert.equal(lines[3], '=== Pazaryeri ===');
+  assert.equal(lines[5], 'Amazon', 'grup içinde başlığa göre sıralı');
+  assert.ok(txt.includes(`Trendyol
+  URL        : https://partner.trendyol.com
+  Kullanıcı  : yasomi
+  E-posta    : info@yasomi.com.tr
+  Telefon    : 0532 000 00 00
+  Şifre      : Ş1fre!
+  Not        : satır 1
+               satır 2
+  Güncelleme : 28.10.2026 18:12
+`));
+  assert.ok(txt.indexOf('=== Pazaryeri ===') < txt.indexOf('=== Sosyal medya ===') && txt.indexOf('=== Sosyal medya ===') < txt.indexOf('=== Diğer ==='), 'sabit kategori sırası');
+  const ig = txt.slice(txt.indexOf('Instagram'), txt.indexOf('=== Diğer'));
+  assert.ok(!ig.includes('URL') && !ig.includes('E-posta') && !ig.includes('Not '), 'boş alanlar atlanır');
+  assert.ok(txt.includes('Bozuk\n  Şifre      : (çözülemedi)'), 'bilinmeyen kategori Diğer; çözülemeyen işaretlenir');
+  assert.ok(!txt.includes('=== Reklam'), 'boş kategori başlığı yok');
+});
+await t('panel: CSP + nonce', async () => {
+  const h = layout({ title: 'x', body: html`<p>${'<script>alert(1)</script>'}</p><script>var a=1</script>`, nonce: 'N0nce' });
+  assert.ok(h.includes('<script nonce="N0nce">var a=1</script>'));
+  assert.ok(h.includes('&lt;script&gt;alert(1)'), 'kaçışlı metne nonce eklenmez');
+  assert.equal((h.match(/<script>/g) || []).length, 0, 'nonce\'suz script kalmadı');
+  assert.ok(h.includes('href="/admin/kasa"'), 'nav: Kasa');
+  const r = page({ title: 'x', body: html`<script>1</script>` });
+  const csp = r.headers.get('content-security-policy');
+  const n = csp.match(/'nonce-([^']+)'/)[1];
+  assert.ok((await r.text()).includes(`<script nonce="${n}">1</script>`));
+  assert.ok(csp.includes("frame-ancestors 'none'") && csp.includes("form-action 'self'"));
 });
 console.log(`unit: ${n} test grubu geçti`);
