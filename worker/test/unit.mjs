@@ -228,7 +228,7 @@ await t('vault: buildExportText', () => {
   const txt = buildExportText([
     { title: 'Trendyol', url: 'https://partner.trendyol.com', username: 'yasomi', email: 'info@yasomi.com.tr', phone: '0532 000 00 00', password: 'Ş1fre!', note: 'satır 1\nsatır 2', category: 'pazaryeri', updated_at: upd },
     { title: 'Instagram', username: 'yasomi', password: 'ig-pw', note: '', category: 'sosyal', updated_at: upd },
-    { title: 'Amazon', password: 'amz', category: 'pazaryeri', updated_at: upd },
+    { title: 'Amazon', url: null, username: null, email: null, phone: null, password: 'amz', note: null, category: 'pazaryeri', updated_at: upd }, // DB'den NULL gelen düz alanlar
     { title: 'Bozuk', password: null, category: 'tanimsiz', updated_at: upd },
   ], now);
   const lines = txt.split('\n');
@@ -237,6 +237,8 @@ await t('vault: buildExportText', () => {
   assert.equal(lines[2], '');
   assert.equal(lines[3], '=== Pazaryeri ===');
   assert.equal(lines[5], 'Amazon', 'grup içinde başlığa göre sıralı');
+  assert.equal(lines[6], '  Şifre      : amz', 'NULL düz alanlar atlanır, çözülemedi yazmaz');
+  assert.equal(lines[7], '  Not        : (çözülemedi)', 'null not = çözülemedi');
   assert.ok(txt.includes(`Trendyol
   URL        : https://partner.trendyol.com
   Kullanıcı  : yasomi

@@ -113,10 +113,11 @@ export function buildExportText(entries, now = Date.now()) {
     lines.push(`=== ${VAULT_CATEGORIES[cat]} ===`, '');
     for (const e of group) {
       lines.push(String(e.title));
-      field('URL', e.url);
-      field('Kullanıcı', e.username);
-      field('E-posta', e.email);
-      field('Telefon', e.phone);
+      // Düz alanlarda null = boş (DB'de NULL); yalnız şifre/not için null "çözülemedi" demektir.
+      field('URL', e.url ?? '');
+      field('Kullanıcı', e.username ?? '');
+      field('E-posta', e.email ?? '');
+      field('Telefon', e.phone ?? '');
       field('Şifre', e.password);
       field('Not', e.note);
       if (e.updated_at) field('Güncelleme', fmtDateTime(e.updated_at));
