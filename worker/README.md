@@ -151,7 +151,7 @@ window.addEventListener('load', function () {
 ```
 
 Doğrulanmamış iki nokta:
-- Sipariş no ve tutar GA4 `dataLayer` `purchase` olayından okunuyor. Ticimax'ta GA4 e-ticaret açık değilse
+- Sipariş no ve tutar Ticimax yer tutucularından ({SIPARISNO}, {SIPARISTOPLAMTUTAR}) okunuyor; 28 Ekim 2026'da canlıya kuruldu. (Eski not: GA4 dataLayer'a bağımlı değil.) Ticimax'ta GA4 e-ticaret açık değilse
   betik sessizce hiçbir şey göndermez; o zaman sipariş sayfasındaki değişkenlere göre düzenlemek gerekir.
   İlk gerçek siparişten sonra panelde satırın düştüğünü kontrol et.
 - Anahtar tarayıcı betiğinde durduğu için sayfa kaynağında görünür. Rastgele çöp isteği keser, kararlı birini

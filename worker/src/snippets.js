@@ -1,64 +1,33 @@
 // Ayarlar sayfasında ve README'de gösterilen Ticimax betikleri (tek kaynak).
+// 28 Ekim 2026: canlıda Script Yönetimi > 'Tüm Sayfalar' ve 'Sipariş Tamamlandı' kayıtlarının sonunda bu bloklar var.
+// Sipariş bloğu Ticimax yer tutucularını ({SIPARISNO}, {SIPARISTOPLAMTUTAR}, {PARABIRIMI}) kullanır; GA4 dataLayer'a bağımlı değildir.
 
 export function ticimaxSnippets(origin = 'https://isailetisim.com') {
-  const allPages = `<!-- 1) TÜM SAYFALAR (Ticimax: Tasarım > Script / Head alanı) -->
+  const allPages = `<!-- 1) TÜM SAYFALAR (Ticimax: Script Yönetimi > Tüm Sayfalar, mevcut içeriğin sonuna) -->
+<!-- isailetisim influencer takibi (28 Ekim 2026): bio'dan gelen ziyaretçinin kodunu 30 gün sakla -->
 <script>
-/* isailetisim influencer takibi: bio'dan gelen ziyaretçinin ref kodunu 30 gün sakla */
-(function () {
-  try {
-    var p = new URLSearchParams(location.search);
-    var r = p.get('utm_content');
-    // Bio sayfası ve /i/ linkleri yasomi.com.tr'ye utm_source=bio&utm_content=<kod> ile gelir
-    if (r && p.get('utm_source') === 'bio' && /^[a-z0-9-]{1,40}$/.test(r)) {
-      localStorage.setItem('yref', JSON.stringify({ r: r, t: Date.now() })); // son tıklayan kazanır
-    }
-  } catch (e) {}
-})();
+(function(){try{
+  var p=new URLSearchParams(location.search), r=(p.get('utm_content')||'').toLowerCase();
+  if(r && p.get('utm_source')==='bio' && /^[a-z0-9-]{1,40}$/.test(r)){
+    localStorage.setItem('yref', JSON.stringify({r:r,t:Date.now()}));
+  }
+}catch(e){}})();
 </script>`;
 
-  const orderPage = `<!-- 2) YALNIZ SİPARİŞ TAMAMLANDI SAYFASI (Ticimax: sipariş sonu / dönüşüm kodu alanı) -->
+  const orderPage = `<!-- 2) YALNIZ SİPARİŞ TAMAMLANDI (Ticimax: Script Yönetimi > Sipariş Tamamlandı, mevcut içeriğin sonuna) -->
+<!-- isailetisim influencer takibi (28 Ekim 2026): siparişi panele bildir (influencer kodu varsa onunla, yoksa organik) -->
 <script>
-/* Influencer'dan gelen siparişi isailetisim paneline bildir */
-window.addEventListener('load', function () {
-  setTimeout(function () {
-    try {
-      var s = JSON.parse(localStorage.getItem('yref') || 'null');
-      if (!s || Date.now() - s.t > 30 * 864e5) return; // influencer'dan gelmeyen sipariş gönderilmez
-
-      // Sipariş no + tutar: GA4 dataLayer 'purchase' olayından okunur.
-      // DOĞRULA: Ticimax'ta GA4 e-ticaret açık değilse bu blok boş döner; o zaman
-      // sipariş no ve tutarı sayfadaki kendi değişkenlerinden okuyacak şekilde değiştir.
-      var dl = window.dataLayer || [], o = null;
-      for (var i = dl.length - 1; i >= 0; i--) {
-        var e = dl[i];
-        if (e && e.event === 'purchase' && e.ecommerce) { o = e.ecommerce; break; }
-      }
-      if (!o || !o.transaction_id) return;
-
-      var id = String(o.transaction_id);
-      var k = 'yref_sent_' + id;           // sayfa yenilenirse aynı sipariş ikinci kez gitmesin
-      if (localStorage.getItem(k)) return;
-      localStorage.setItem(k, '1');
-
-      fetch('${origin}/api/purchase', {
-        method: 'POST',
-        keepalive: true,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Postback-Key': 'PURCHASE_KEY_DEGERI' // wrangler secret put PURCHASE_KEY ile verdiğin değer
-        },
-        body: JSON.stringify({
-          ref: s.r,
-          order_id: id,
-          amount: Number(o.value) || 0,
-          currency: o.currency || 'TRY',
-          source: 'site',
-          note: 'ticimax'
-        })
-      });
-    } catch (e) {}
-  }, 1500); // dataLayer'ın dolmasını bekle
-});
+(function(){try{
+  var s=null; try{s=JSON.parse(localStorage.getItem('yref')||'null');}catch(_){}
+  var ref=(s&&s.r&&Date.now()-s.t<=30*864e5)?s.r:'';
+  var id=String('{SIPARISNO}'||'{SIPARISID}').trim();
+  if(!id||id.charAt(0)==='{')return;
+  var k='yref_sent_'+id; if(localStorage.getItem(k))return; localStorage.setItem(k,'1');
+  function num(v){var t=String(v==null?'':v).trim().replace(/\\s/g,'').replace(/[^0-9,.-]/g,'');if(t.indexOf(',')!==-1){t=t.replace(/\\./g,'').replace(',','.');}var n=Number(t);return isFinite(n)?n:0;}
+  var cur=String('{PARABIRIMI}'||'TRY').trim().toUpperCase(); if(cur==='TL'||cur==='₺'||cur.indexOf('T')===0)cur='TRY';
+  var body=JSON.stringify({ref:ref,order_id:id,amount:num('{SIPARISTOPLAMTUTAR}'),currency:cur,source:'site',note:ref?'ticimax siparis sonu':'ticimax siparis sonu · organik'});
+  fetch('${origin}/api/purchase',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','X-Postback-Key':'PURCHASE_KEY_DEGERI'},body:body}).catch(function(){});
+}catch(e){}})();
 </script>`;
   return { allPages, orderPage };
 }
