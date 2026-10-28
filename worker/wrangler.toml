@@ -2,21 +2,25 @@ name = "isailetisim"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
 workers_dev = true
+preview_urls = false
 
 # Canlıya alırken (isailetisim.com zone'u Cloudflare hesabında olmalı) bu satırı aç:
-# routes = [{ pattern = "isailetisim.com", custom_domain = true }]
+routes = [
+  { pattern = "isailetisim.com", custom_domain = true },
+  { pattern = "www.isailetisim.com", custom_domain = true }
+]
 
 [assets]
 directory = "../"
 binding = "ASSETS"
 # Bu yollar önce Worker'a gider; gerisi statik dosya. Eşleşmeyen yol Worker'a düşer (/:code kısayolu, yoksa 404).
-run_worker_first = ["/i/*", "/api/*", "/admin", "/admin/*"]
+run_worker_first = true
 
 [[d1_databases]]
 binding = "DB"
 database_name = "isailetisim"
 # `npx wrangler d1 create isailetisim` çıktısındaki database_id'yi buraya yapıştır
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "34634dba-971a-4bd6-b870-64fb05e4ba14"
 migrations_dir = "migrations"
 
 [observability]

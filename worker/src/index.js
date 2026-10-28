@@ -8,6 +8,11 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const p = url.pathname;
+    // www.isailetisim.com -> isailetisim.com (kalıcı yönlendirme)
+    if (url.hostname.startsWith('www.')) {
+      url.hostname = url.hostname.slice(4);
+      return Response.redirect(url.toString(), 301);
+    }
     try {
       // 1) Influencer linki (kanonik biçim)
       const im = p.match(/^\/i\/([^/]+)\/?$/);
@@ -26,7 +31,13 @@ export default {
       // 3) Panel
       if (p === '/admin' || p.startsWith('/admin/')) return handleAdmin(request, env, ctx, url);
 
-      // 4) Statik dosya bulunamadı: kısa biçim /:code yalnız kod varsa ve aktifse
+      // 4) Önce statik dosya (run_worker_first = true olduğu için her istek buradan geçer)
+      let assetRes = null;
+      if (env.ASSETS) {
+        assetRes = await env.ASSETS.fetch(request);
+        if (assetRes.status !== 404) return assetRes;
+      }
+      // Statik dosya yoksa: kısa biçim /:code yalnız kod varsa ve aktifse
       const sm = p.match(/^\/([a-z0-9-]{1,40})\/?$/i);
       if (sm && request.method === 'GET') {
         const code = sm[1].toLowerCase();
@@ -37,6 +48,7 @@ export default {
       }
 
       // 5) Gerçek 404 (assets'in kendi 404'ü)
+      if (assetRes) return assetRes;
       if (env.ASSETS) return env.ASSETS.fetch(request);
       return new Response('Bulunamadı', { status: 404 });
     } catch (err) {
