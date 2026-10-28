@@ -5,6 +5,7 @@ import { esc, html, fmtNum, fmtTRY, barChart, chartBlock } from '../src/html.js'
 import { createSessionCookie, verifySessionValue, safeEqual } from '../src/auth.js';
 import { buildLocation } from '../src/track.js';
 import { detectSource, sourceFromTag, sourceFromReferer, trafficLabel } from '../src/sources.js';
+import { ticimaxSnippets } from '../src/snippets.js';
 
 let n = 0;
 const t = async (name, fn) => { await fn(); n++; };
@@ -35,7 +36,7 @@ await t('sourceFromTag', () => {
   assert.equal(sourceFromTag(''), null);
 });
 await t('sourceFromReferer', () => {
-  const r = (x) => sourceFromReferer(x, 'isailetisim.com');
+  const r = (x) => sourceFromReferer(x, 'yasomi.net');
   assert.equal(r('https://l.instagram.com/?u=x'), 'instagram');
   assert.equal(r('https://www.instagram.com/yasomi'), 'instagram');
   assert.equal(r('https://www.tiktok.com/@yasomi'), 'tiktok');
@@ -49,14 +50,18 @@ await t('sourceFromReferer', () => {
   assert.equal(r('https://www.trendyol.com/x'), 'web:trendyol.com');
   assert.equal(r('https://' + 'a'.repeat(60) + '.com/'), ('web:' + 'a'.repeat(60)).slice(0, 40));
   assert.equal(r('https://notgoogle.com/'), 'web:notgoogle.com');
-  assert.equal(r('https://isailetisim.com/#x'), null, 'kendi alan adı yok sayılır');
+  assert.equal(r('https://yasomi.net/#x'), null, 'kendi alan adı yok sayılır');
+  assert.equal(r('https://www.yasomi.net/'), null);
+  assert.equal(r('https://isailetisim.com/#x'), null, 'eski alan adı da kendi sayılır');
   assert.equal(r('https://www.isailetisim.com/'), null);
+  assert.equal(sourceFromReferer('https://yasomi.net/', 'x.workers.dev'), null, 'workers.dev üzerinden de');
+  assert.equal(r('https://yasomi.com.tr/'), 'web:yasomi.com.tr', 'marka sitesi kendi değil');
   assert.equal(r('android-app://com.instagram.android/'), 'instagram');
   assert.equal(r('nope'), null);
   assert.equal(r(null), null);
 });
 await t('detectSource öncelik', () => {
-  const U = 'https://isailetisim.com/';
+  const U = 'https://yasomi.net/';
   const d = (q, referer, browser) => detectSource({ url: U + q, referer, browser });
   assert.deepEqual(d('?s=ig', 'https://l.facebook.com/', 'TikTok in-app'), { source: 'instagram', code: null });
   assert.deepEqual(d('?s=kampanya&ref=ayse', null, null), { source: 's:kampanya', code: null });
@@ -66,7 +71,7 @@ await t('detectSource öncelik', () => {
   assert.deepEqual(d('', null, 'Instagram in-app'), { source: 'instagram', code: null });
   assert.deepEqual(d('', null, 'TikTok in-app'), { source: 'tiktok', code: null });
   assert.deepEqual(d('', null, 'Facebook in-app'), { source: 'facebook', code: null });
-  assert.deepEqual(d('', 'https://isailetisim.com/', 'Safari'), { source: 'direkt', code: null });
+  assert.deepEqual(d('', 'https://yasomi.net/', 'Safari'), { source: 'direkt', code: null });
   assert.deepEqual(d('', null, 'Chrome'), { source: 'direkt', code: null });
   assert.deepEqual(detectSource({ url: U + '?ref=ayse', referer: null, browser: 'Instagram in-app', ignoreRef: true }), { source: 'instagram', code: null });
 });
@@ -113,12 +118,28 @@ await t('normalizeTarget', () => {
   assert.equal(u.normalizeTarget('https://www.trendyol.com/x'), 'https://www.trendyol.com/x');
 });
 await t('buildLocation', () => {
-  assert.equal(buildLocation('/', 'ayse', 'https://isailetisim.com'), '/?ref=ayse');
-  assert.equal(buildLocation('/#urun-c11-pro', 'ayse', 'https://isailetisim.com'), '/?ref=ayse#urun-c11-pro');
+  assert.equal(buildLocation('/', 'ayse', 'https://yasomi.net'), '/?ref=ayse');
+  assert.equal(buildLocation('/#urun-c11-pro', 'ayse', 'https://yasomi.net'), '/?ref=ayse#urun-c11-pro');
   assert.equal(buildLocation('https://www.trendyol.com/p/1', 'ayse', 'x://'), 'https://www.trendyol.com/p/1');
-  const y = new URL(buildLocation('https://www.yasomi.com.tr/urun', 'ayse', 'https://isailetisim.com'));
+  const y = new URL(buildLocation('https://www.yasomi.com.tr/urun', 'ayse', 'https://yasomi.net'));
   assert.equal(y.searchParams.get('utm_content'), 'ayse');
   assert.equal(y.searchParams.get('utm_source'), 'bio');
+});
+await t('siteOrigin', () => {
+  assert.equal(u.siteOrigin({ SITE_ORIGIN: 'https://yasomi.net' }), 'https://yasomi.net');
+  assert.equal(u.siteOrigin({ SITE_ORIGIN: 'https://yasomi.net/' }), 'https://yasomi.net', 'sondaki / atılır');
+  assert.equal(u.siteOrigin({}), 'https://yasomi.net', 'yoksa varsayılan');
+  assert.equal(u.siteOrigin(undefined), 'https://yasomi.net');
+  assert.equal(u.siteOrigin({ SITE_ORIGIN: 'yasomi.net' }), 'https://yasomi.net', 'şemasız değer geçersiz -> varsayılan');
+  assert.equal(u.siteOrigin({ SITE_ORIGIN: 'http://localhost:8790' }), 'http://localhost:8790');
+  assert.equal(u.siteHost({ SITE_ORIGIN: 'https://yasomi.net' }), 'yasomi.net');
+  assert.ok(u.LEGACY_HOSTS.has('isailetisim.com') && u.LEGACY_HOSTS.has('www.isailetisim.com'));
+  assert.ok(!u.LEGACY_HOSTS.has('yasomi.net'));
+});
+await t('ticimaxSnippets', () => {
+  assert.ok(ticimaxSnippets().orderPage.includes("fetch('https://yasomi.net/api/purchase'"), 'varsayılan yasomi.net');
+  assert.ok(ticimaxSnippets('https://ornek.test').orderPage.includes("fetch('https://ornek.test/api/purchase'"));
+  assert.ok(ticimaxSnippets().allPages.includes("p.get('utm_source')==='bio'"));
 });
 await t('esc/html', () => {
   assert.equal(esc('<a href="x">\'&'), '&lt;a href=&quot;x&quot;&gt;&#39;&amp;');

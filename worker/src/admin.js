@@ -2,15 +2,14 @@
 import * as db from './db.js';
 import { isLoggedIn, attemptLogin, clearSessionCookie, authConfigured } from './auth.js';
 import { html, raw, esc, page, layout, kpiRow, chartBlock, viewKpiRow, hourChart, fmtNum, fmtTRY, pct, PLATFORMS, SOURCE_LABELS, DEVICE_LABELS, TYPE_LABELS } from './html.js';
-import { isValidCode, slugify, normalizeTarget, parseAmount, clip, dayOf, daysAgo, fmtDateTime, fmtDay, noonOfDay, parseCookies, RESERVED_CODES, CHANNELS, DAY_MS } from './util.js';
+import { isValidCode, slugify, normalizeTarget, parseAmount, clip, dayOf, daysAgo, fmtDateTime, fmtDay, noonOfDay, parseCookies, RESERVED_CODES, CHANNELS, DAY_MS, siteOrigin, siteHost } from './util.js';
 import { PURCHASE_SOURCES, NOVIEW_COOKIE } from './track.js';
 import { trafficLabel } from './sources.js';
 import { ticimaxSnippets } from './snippets.js';
 
 const PER_PAGE = 100;
 
-const publicOrigin = (env) => (env.PUBLIC_ORIGIN || 'https://isailetisim.com').replace(/\/+$/, '');
-const linkFor = (env, code) => `${publicOrigin(env)}/i/${code}`;
+const linkFor = (env, code) => `${siteOrigin(env)}/i/${code}`;
 const see = (location, headers = {}) => new Response(null, { status: 303, headers: { location, 'cache-control': 'no-store', ...headers } });
 
 export async function handleAdmin(request, env, ctx, url) {
@@ -133,7 +132,7 @@ async function overview(env) {
   const org = t.organic;
   const body = html`
     <div class="row" style="margin-bottom:12px"><h1 style="margin:0">Genel bakış</h1><span class="spacer"></span><a class="btn" href="/admin/new">+ Yeni link oluştur</a></div>
-    <div class="sec">Bio sayfası · <span class="dom">isailetisim.com</span></div>
+    <div class="sec">Bio sayfası · <span class="dom">${siteHost(env)}</span></div>
     ${viewKpiRow(vk, OVERVIEW_PERIODS, 'd30')}
     <div class="card" id="kaynaklar">
       <div class="row" style="margin-bottom:10px"><h2 style="margin:0">Nereden geliyorlar? <span class="muted small">(son 30 gün)</span></h2><span class="spacer"></span>
@@ -189,7 +188,7 @@ function linkForm(env, v, { edit = false, error = '' } = {}) {
         ${edit
           ? html`<input id="code" value="${v.code}" disabled><span class="hint">Kod değişmez; değişirse paylaşılmış linkler kırılır.</span>`
           : html`<input id="code" name="code" value="${v.code || ''}" placeholder="ayse-kaya" required maxlength="40" pattern="[a-z0-9](?:[a-z0-9\\-]{0,38}[a-z0-9])?" autocapitalize="off" autocomplete="off" spellcheck="false">
-            <span class="hint">Küçük harf, rakam ve tire. Link: <b id="preview">${publicOrigin(env)}/i/${v.code || '…'}</b></span>`}
+            <span class="hint">Küçük harf, rakam ve tire. Link: <b id="preview">${siteOrigin(env)}/i/${v.code || '…'}</b></span>`}
       </div>
       <div class="f"><label for="note">Not (kampanya / ürün)</label><textarea id="note" name="note" rows="2" maxlength="500" placeholder="Kasım C11 Pro kampanyası, barter">${v.note || ''}</textarea></div>
       <div class="f"><label for="target">Hedef</label><input id="target" name="target" value="${v.target || '/'}" list="targets" maxlength="1000" autocapitalize="off" spellcheck="false">
@@ -203,7 +202,7 @@ function linkForm(env, v, { edit = false, error = '' } = {}) {
     ${edit ? '' : raw(`<script>
     (function(){
       var n=document.getElementById('name'),c=document.getElementById('code'),pv=document.getElementById('preview'),touched=!!c.value;
-      var base=${JSON.stringify(publicOrigin(env) + '/i/')};
+      var base=${JSON.stringify(siteOrigin(env) + '/i/')};
       var map={'ç':'c','ğ':'g','ı':'i','ö':'o','ş':'s','ü':'u','â':'a','î':'i','û':'u'};
       function slug(s){return s.replace(/İ/g,'i').replace(/I/g,'ı').toLowerCase().replace(/[çğıöşüâîû]/g,function(x){return map[x]})
         .normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40).replace(/-+$/,'')}
@@ -236,7 +235,7 @@ async function createLink(request, env) {
   if (!v.name) return newLinkPage(env, v, 'İsim gerekli.', 400);
   if (!isValidCode(v.code)) {
     const why = CHANNELS[v.code]
-      ? `"${v.code}" kodu kanal linki için ayrılmış (isailetisim.com/${v.code} → ${trafficLabel(CHANNELS[v.code])}). Başka bir kod seç.`
+      ? `"${v.code}" kodu kanal linki için ayrılmış (${siteHost(env)}/${v.code} → ${trafficLabel(CHANNELS[v.code])}). Başka bir kod seç.`
       : RESERVED_CODES.has(v.code) ? `"${v.code}" kodu sistemde ayrılmış (admin, api, assets, i…). Başka bir kod seç.`
       : 'Kod geçersiz: küçük harf, rakam ve tire; tireyle başlayıp bitemez.';
     return newLinkPage(env, v, why, 400);
@@ -433,7 +432,7 @@ async function setNoView(request) {
 }
 
 async function settingsPage(request, env, url) {
-  const origin = publicOrigin(env);
+  const origin = siteOrigin(env);
   const excluded = parseCookies(request.headers.get('cookie'))[NOVIEW_COOKIE] === '1';
   const ok = SETTINGS_OK[url.searchParams.get('ok')];
   const { allPages, orderPage } = ticimaxSnippets(origin);
@@ -449,10 +448,10 @@ async function settingsPage(request, env, url) {
   const body = html`<h1>Ayarlar</h1>
     ${ok ? html`<div class="alert ok">${ok}</div>` : ''}
     <div class="card" id="kanallar"><h2>Bio linkleri (kanal başına)</h2>
-      <p class="small">Her platformun bio'suna kendi linkini koy: Instagram bio'suna <b>${origin.replace(/^https?:\/\//, '')}/ig</b>, TikTok'a <b>/tt</b> gibi.
+      <p class="small">Her platformun bio'suna kendi linkini koy: Instagram bio'suna <b>${siteHost(env)}/ig</b>, TikTok'a <b>/tt</b> gibi.
       Link ziyaretçiyi bio sayfasına götürür ve ziyareti o kanala yazar. Bu linkler olmadan da Instagram, TikTok ve Facebook uygulamasından gelen ziyaret
       uygulama içi tarayıcıdan büyük ölçüde tanınır; ama uygulamalar çoğu zaman nereden geldiğini (referer) gizler ve kişi linki kopyalayıp Safari'de açarsa
-      "Direkt" görünür. Etiketli link her durumda kesindir. Başka bir yer için <code>?s=</code> ile kendi etiketini de verebilirsin: <code>${origin.replace(/^https?:\/\//, '')}/?s=kasim-cekilis</code>.</p>
+      "Direkt" görünür. Etiketli link her durumda kesindir. Başka bir yer için <code>?s=</code> ile kendi etiketini de verebilirsin: <code>${siteHost(env)}/?s=kasim-cekilis</code>.</p>
       <div class="chan">${chan}</div>
     </div>
     <div class="card" id="ben"><h2>Kendi ziyaretlerim</h2>
@@ -546,7 +545,7 @@ async function visitorsPage(env, url) {
 
   const body = html`
     <div class="row" style="margin-bottom:12px"><h1 style="margin:0">Ziyaretçiler</h1><span class="spacer"></span>${seg}</div>
-    <p class="small muted" style="margin:-4px 0 12px">Bio sayfasının (isailetisim.com) açılışları. Botlar, link önizlemeleri ve aynı kişinin 30 sn içindeki tekrarı sayılmaz.
+    <p class="small muted" style="margin:-4px 0 12px">Bio sayfasının (${siteHost(env)}) açılışları. Botlar, link önizlemeleri ve aynı kişinin 30 sn içindeki tekrarı sayılmaz.
       Tekil = farklı cihaz/ağ (IP özeti). Tıklama = sayfadan bir mağazaya geçiş.</p>
     ${viewKpiRow(k, periods, mainKey)}
 

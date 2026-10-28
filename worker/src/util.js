@@ -149,3 +149,18 @@ export function json(data, status = 200, headers = {}) {
     headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...headers },
   });
 }
+
+// ---------------------------------------------------------------- alan adı
+// 28 Ekim 2026: kanonik adres yasomi.net (wrangler.toml [vars] SITE_ORIGIN). Eski alan adı 301 ile buraya gider (/api hariç).
+export const DEFAULT_SITE_ORIGIN = 'https://yasomi.net';
+/** Eski alan adı: /api/* dışındaki her istek SITE_ORIGIN'e 301 (Ticimax postback'i ve eski beacon'lar hâlâ buraya gelir). */
+export const LEGACY_HOSTS = new Set(['isailetisim.com', 'www.isailetisim.com']);
+
+/** Panelde, betiklerde ve linklerde gösterilen kanonik adres: 'https://yasomi.net' (sonda / yok). */
+export function siteOrigin(env) {
+  const v = String((env && env.SITE_ORIGIN) || '').trim().replace(/\/+$/, '');
+  return /^https?:\/\/[^/\s]+$/i.test(v) ? v : DEFAULT_SITE_ORIGIN;
+}
+
+/** 'yasomi.net' (şemasız). */
+export const siteHost = (env) => siteOrigin(env).replace(/^https?:\/\//i, '');

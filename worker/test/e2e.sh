@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Yerel uçtan uca test. Önce: npx wrangler d1 migrations apply isailetisim --local && npx wrangler dev --local --port 8788
+# Yerel uçtan uca test. Önce: npx wrangler d1 migrations apply isailetisim --local && npx wrangler dev --local --port 8788 --infer-origin-from-routes=false
+# (--infer-origin-from-routes=false: Host başlığı Worker'a olduğu gibi ulaşsın; alan adı testleri buna dayanır)
 # Kullanım: bash test/e2e.sh   (şifre/anahtar .dev.vars'tan okunur; başka port: BASE=http://localhost:8789 bash test/e2e.sh)
 set -u
 B=${BASE:-http://localhost:8788}
@@ -103,7 +104,7 @@ grep -q '&lt;script&gt;alert(1)&lt;/script&gt; Ayşe' $J && ok "/admin isim kaç
 grep -q '<script>alert(1)' $J && no "XSS" "ham script var" || ok "ham <script>alert yok"
 curl -s -b $CK $B/admin/i/test > $J
 check "/admin/i/test 200" "$(curl -s -b $CK -o /dev/null -w '%{http_code}' $B/admin/i/test)" 200
-grep -q "$B/i/test\|https://isailetisim.com/i/test" $J && ok "detay: link" || no "detay link" "?"
+grep -q 'data-copy="https://yasomi.net/i/test"\|<code>yasomi.net/i/test</code>\|https://yasomi.net/i/test' $J && ok "detay: link yasomi.net/i/test" || no "detay link" "$(grep -o '[a-z.:/]*/i/test' $J | sort -u | tr '\n' ' ')"
 grep -q '>trendyol<' $J && ok "detay: hedef tablosu trendyol" || no "hedef tablosu" "?"
 grep -q 'Instagram in-app' $J && ok "detay: tarayıcı kırılımı" || no "tarayıcı" "?"
 grep -q '#TY-55' $J && ok "detay: olay kaydında sipariş" || no "olay kaydı" "?"
@@ -211,6 +212,34 @@ H=$(curl -s -b $CK -c $CK -D - -o /dev/null -X POST -d 'mode=off' $B/admin/setti
 echo "$H" | grep -i '^set-cookie:' | grep -q 'ynoview=; Max-Age=0; Path=/' && ok "Tekrar say çerezi siler" || no "Tekrar say" "$(echo "$H" | grep -i set-cookie)"
 curl -s -o /dev/null -b $CK -A "$SAF" -H 'cf-connecting-ip: 192.0.2.40' $B/; sleep 1
 check "Tekrar say sonrası görüntüleme yazılır" "$(q "SELECT COUNT(*) FROM events WHERE type='view'")" "$((N0 + 1))"
+# 10) Alan adı: yasomi.net kanonik, isailetisim.com /api dışında 301
+loc(){ curl -s -D - -o /dev/null "$@" | grep -i '^location:' | tr -d '\r' | cut -d' ' -f2; }
+code(){ curl -s -o /dev/null -w '%{http_code}' "$@"; }
+check "eski alan adı /foo?x=1 -> 301" "$(code -H 'Host: isailetisim.com' "$B/foo?x=1")" 301
+check "eski alan adı Location" "$(loc -H 'Host: isailetisim.com' "$B/foo?x=1")" "https://yasomi.net/foo?x=1"
+check "eski www /i/test -> yasomi.net/i/test" "$(loc -H 'Host: www.isailetisim.com' "$B/i/test")" "https://yasomi.net/i/test"
+check "eski alan adı / -> yasomi.net/" "$(loc -H 'Host: isailetisim.com' "$B/")" "https://yasomi.net/"
+check "eski alan adı /admin -> yasomi.net/admin" "$(loc -H 'Host: isailetisim.com' "$B/admin")" "https://yasomi.net/admin"
+check "eski alan adı /api/click yönlenmez (204)" "$(code -H 'Host: isailetisim.com' -X POST -d '{"target":"x"}' $B/api/click)" 204
+check "eski www /api/click yönlenmez (204)" "$(code -H 'Host: www.isailetisim.com' -X POST -d '{"target":"x"}' $B/api/click)" 204
+check "eski alan adı /api/purchase işlenir (anahtarsız 401)" "$(code -H 'Host: isailetisim.com' -X POST -d '{"amount":1}' $B/api/purchase)" 401
+check "eski alan adı CORS preflight" "$(curl -s -D - -o /dev/null -X OPTIONS -H 'Host: isailetisim.com' -H 'Origin: https://www.yasomi.com.tr' -H 'Access-Control-Request-Method: POST' $B/api/purchase | grep -ci '^access-control-allow-origin: https://www.yasomi.com.tr')" 1
+check "yasomi.net Host -> 200 (yönlenmez)" "$(code -H 'Host: yasomi.net' $B/)" 200
+check "www.yasomi.net -> apex 301" "$(loc -H 'Host: www.yasomi.net' "$B/a?b=1" | sed 's#^https\{0,1\}://##')" "yasomi.net/a?b=1"
+curl -s -b $CK $B/admin/settings > $J
+grep -q '<code>yasomi.net/ig</code>' $J && ok "ayarlar: yasomi.net/ig" || no "ayarlar yasomi.net/ig" "$(grep -o '<code>[^<]*/ig</code>' $J)"
+grep -q 'data-copy="https://yasomi.net/ig"' $J && ok "ayarlar: kopyala https://yasomi.net/ig" || no "ayarlar kopyala" "?"
+grep -q "fetch(&#39;https://yasomi.net/api/purchase&#39;\|fetch('https://yasomi.net/api/purchase'" $J && ok "ayarlar: Ticimax betiği yasomi.net" || no "Ticimax betiği" "$(grep -o 'fetch([^,]*' $J | head -2)"
+grep -q 'isailetisim.com/api/purchase adresi de çalışmaya devam eder' $J && ok "ayarlar: eski uç not" || no "eski uç not" "?"
+check "ayarlar: eski alan adı adres olarak geçmiyor" "$(grep -o 'https\{0,1\}://isailetisim.com[^ <\"&]*' $J | grep -vc 'isailetisim.com/api/purchase')" 0
+curl -s -b $CK $B/admin > $J
+grep -q '<span class="dom">yasomi.net</span>' $J && ok "/admin: başlık yasomi.net" || no "/admin dom" "$(grep -o '<span class="dom">[^<]*' $J)"
+grep -q 'data-copy="https://yasomi.net/i/test"' $J && ok "/admin: kopyala https://yasomi.net/i/test" || no "/admin kopyala" "$(grep -o 'data-copy="[^"]*/i/test"' $J)"
+check "/admin/new önizleme yasomi.net" "$(curl -s -b $CK $B/admin/new | grep -c 'https://yasomi.net/i/')" 2
+check "/admin/ziyaretciler metni yasomi.net" "$(curl -s -b $CK $B/admin/ziyaretciler | grep -c 'Bio sayfasının (yasomi.net)')" 1
+check "statik canonical yasomi.net" "$(curl -s $B/ | grep -c '<link rel="canonical" href="https://yasomi.net/">')" 1
+check "robots.txt sitemap yasomi.net" "$(curl -s $B/robots.txt | grep -c 'Sitemap: https://yasomi.net/sitemap.xml')" 1
+
 check "çıkış -> 303" "$(curl -s -b $CK -c $CK -o /dev/null -w '%{http_code}' -X POST $B/admin/logout)" 303
 check "çıkıştan sonra giriş sayfası" "$(curl -s -b $CK $B/admin | grep -c 'name="password"')" 1
 

@@ -48,6 +48,8 @@ export function sourceFromTag(s) {
   return slug ? `s:${slug}` : null;
 }
 
+const SELF_HOSTS = new Set(['yasomi.net', 'isailetisim.com']);
+
 /** Ham Referer -> kaynak; kendi alan adımızdan geliyorsa (sayfa içi gezinme) veya yoksa null. */
 export function sourceFromReferer(referer, selfHost = '') {
   if (!referer) return null;
@@ -58,6 +60,7 @@ export function sourceFromReferer(referer, selfHost = '') {
   if (u.protocol === 'android-app:') return ANDROID_APPS[host] || `web:${host}`.slice(0, 40);
   const self = String(selfHost || '').toLowerCase().replace(/^www\./, '');
   if (self && host === self) return null;
+  if (SELF_HOSTS.has(host)) return null; // eski/yeni kendi alan adımız (isailetisim.com -> yasomi.net geçişi)
   for (const [re, src] of HOST_RULES) if (re.test(host)) return src;
   return `web:${host}`.slice(0, 40);
 }

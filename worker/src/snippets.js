@@ -1,8 +1,11 @@
 // Ayarlar sayfasında ve README'de gösterilen Ticimax betikleri (tek kaynak).
 // 28 Ekim 2026: canlıda Script Yönetimi > 'Tüm Sayfalar' ve 'Sipariş Tamamlandı' kayıtlarının sonunda bu bloklar var.
+// origin = env.SITE_ORIGIN (yasomi.net); admin.js > settingsPage geçirir.
 // Sipariş bloğu Ticimax yer tutucularını ({SIPARISNO}, {SIPARISTOPLAMTUTAR}, {PARABIRIMI}) kullanır; GA4 dataLayer'a bağımlı değildir.
 
-export function ticimaxSnippets(origin = 'https://isailetisim.com') {
+import { DEFAULT_SITE_ORIGIN } from './util.js';
+
+export function ticimaxSnippets(origin = DEFAULT_SITE_ORIGIN) {
   const allPages = `<!-- 1) TÜM SAYFALAR (Ticimax: Script Yönetimi > Tüm Sayfalar, mevcut içeriğin sonuna) -->
 <!-- isailetisim influencer takibi (28 Ekim 2026): bio'dan gelen ziyaretçinin kodunu 30 gün sakla -->
 <script>
@@ -16,6 +19,7 @@ export function ticimaxSnippets(origin = 'https://isailetisim.com') {
 
   const orderPage = `<!-- 2) YALNIZ SİPARİŞ TAMAMLANDI (Ticimax: Script Yönetimi > Sipariş Tamamlandı, mevcut içeriğin sonuna) -->
 <!-- isailetisim influencer takibi (28 Ekim 2026): siparişi panele bildir (influencer kodu varsa onunla, yoksa organik) -->
+<!-- Not: eski https://isailetisim.com/api/purchase adresi de çalışmaya devam eder; betiği değiştirmek zorunlu değil. -->
 <script>
 (function(){try{
   var s=null; try{s=JSON.parse(localStorage.getItem('yref')||'null');}catch(_){}

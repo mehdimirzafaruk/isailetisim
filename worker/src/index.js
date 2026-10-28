@@ -1,15 +1,20 @@
-// isailetisim.com Worker: statik bio sitesi (Workers static assets) + influencer takibi + /admin paneli.
+// yasomi.net Worker (eski adı isailetisim.com): statik bio sitesi (Workers static assets) + influencer takibi + /admin paneli.
 import * as track from './track.js';
 import { handleAdmin } from './admin.js';
 import { getInfluencer } from './db.js';
-import { isValidCode, json } from './util.js';
+import { isValidCode, json, siteOrigin, LEGACY_HOSTS } from './util.js';
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const p = url.pathname;
-    // www.isailetisim.com -> isailetisim.com (kalıcı yönlendirme)
-    if (url.hostname.startsWith('www.')) {
+    const host = url.hostname.toLowerCase();
+    // Eski alan adı (isailetisim.com, www dahil) -> SITE_ORIGIN, aynı yol + sorgu (301). /api/* yönlendirilmez:
+    // canlı Ticimax postback'i ve eski sayfaların beacon'ları hâlâ buraya POST atıyor; normal işlenir.
+    if (LEGACY_HOSTS.has(host)) {
+      if (!p.startsWith('/api/')) return Response.redirect(siteOrigin(env) + p + url.search, 301);
+    } else if (host.startsWith('www.')) {
+      // www.yasomi.net -> yasomi.net (kalıcı yönlendirme)
       url.hostname = url.hostname.slice(4);
       return Response.redirect(url.toString(), 301);
     }

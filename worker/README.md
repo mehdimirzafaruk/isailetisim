@@ -1,6 +1,6 @@
 # isailetisim · influencer takibi
 
-`isailetisim.com` bio sayfasını sunan ve influencer linklerini sayan Cloudflare Worker.
+`yasomi.net` bio sayfasını sunan ve influencer linklerini sayan Cloudflare Worker (eski adres `isailetisim.com`, aşağıda **Alan adı yasomi.net**).
 Veritabanı D1. Panel `/admin`. Derleme adımı yok, framework yok.
 
 ## Ne yapar
@@ -35,11 +35,10 @@ Komutların hepsi `worker/` klasöründe çalışır.
    npx wrangler secret put SESSION_SECRET     # uzun rastgele dizi: openssl rand -hex 32
    npx wrangler secret put PURCHASE_KEY       # postback anahtarı: openssl rand -hex 16
    ```
-5. Alan adı: `isailetisim.com` zone'u Cloudflare hesabında olmalı. `wrangler.toml` içindeki satırı aç:
-   `routes = [{ pattern = "isailetisim.com", custom_domain = true }]`.
-   Şu an site GitHub Pages'te (`CNAME` dosyası). Apex'te GitHub Pages A kayıtları duruyorsa custom domain
-   oluşmaz; önce o kayıtları sil.
-6. Yayın: `npx wrangler deploy`. Sonra `https://isailetisim.com/admin` aç, şifreyle gir.
+5. Alan adı: `yasomi.net` ve (eski) `isailetisim.com` zone'ları Cloudflare hesabında olmalı. `wrangler.toml` içindeki
+   `routes` dördünü de custom domain olarak tanımlar (apex + www, iki alan adı). Apex'te başka A/CNAME kaydı
+   duruyorsa custom domain oluşmaz; önce o kayıtları sil.
+6. Yayın: `npx wrangler deploy`. Sonra `https://yasomi.net/admin` aç, şifreyle gir.
 7. `bio-snippet.html` içindeki betiği `index.html`'de `</body>`'den hemen önce yapıştır ve yayınla.
 
 Sonraki her değişiklik: `npx wrangler deploy`. Yeni migration varsa önce 3. adım.
@@ -47,6 +46,21 @@ Sonraki her değişiklik: `npx wrangler deploy`. Yeni migration varsa önce 3. a
 **0002_views (ziyaretçi sayacı) için sıra önemli:** önce `npx wrangler d1 migrations apply isailetisim --remote`,
 sonra `npx wrangler deploy`. Ters sırada yeni kod `view` yazmaya çalışır, eski CHECK kısıtı reddeder; hata yalnız
 loglara düşer, sayfa yine açılır, ama o aradaki ziyaretler kaybolur.
+
+## Alan adı yasomi.net (28 Ekim 2026)
+
+- Kanonik adres `https://yasomi.net`. Panel linkleri (`/i/<kod>`), kanal linkleri (`/ig`, `/tt`…), Ayarlar'daki Ticimax
+  betiği ve curl örneği bu adresle gösterilir. `index.html` canonical/OG, `sitemap.xml` ve `robots.txt` de yasomi.net.
+- `isailetisim.com` ve `www.isailetisim.com`: `/api/*` dışındaki her istek aynı yol ve sorguyla `https://yasomi.net`'e
+  **301** gider (eski bio ve `/i/<kod>` linkleri çalışır; çerez yasomi.net'te normal akışla konur). `/api/*` yönlendirilmez,
+  iki alan adında da aynı işlenir: canlı Ticimax betiği hâlâ `https://isailetisim.com/api/purchase`'a gönderiyor.
+  `www.yasomi.net` → `yasomi.net` (301).
+- Eski alan adındaki panel oturumu taşınmaz (çerez alan adına bağlı); yasomi.net/admin'de bir kez yeniden giriş yap.
+  "Beni sayma" çerezi de yeni alan adında bir kez daha basılmalı.
+- Adresi değiştirmek: `wrangler.toml` > `[vars]` > `SITE_ORIGIN = "https://yasomi.net"` (sonda `/` yok), sonra
+  `npx wrangler deploy`. Değer yoksa ya da bozuksa kod `https://yasomi.net` kullanır. Eski alan adları listesi
+  `src/util.js` > `LEGACY_HOSTS`. `index.html`, `sitemap.xml`, `robots.txt` statik; onları elle değiştir.
+- Ticimax'taki betiği yasomi.net'e çevirmek zorunlu değil; çevirirsen Ayarlar sayfasındaki güncel bloğu yapıştır.
 
 ## Link oluşturma
 
@@ -57,7 +71,7 @@ Hedef:
 - Tam URL (Trendyol ürün sayfası, yasomi.com.tr ürünü). Ziyaret yine yazılır, çerez yine konur, ziyaretçi oraya gider.
   yasomi.com.tr adreslerine otomatik `utm_content=<kod>` eklenir.
 
-Kaydedince link çıkar: `https://isailetisim.com/i/<kod>` ve **Kopyala** düğmesi. Kod sonradan değişmez.
+Kaydedince link çıkar: `https://yasomi.net/i/<kod>` ve **Kopyala** düğmesi. Kod sonradan değişmez.
 Bir influencer'la iş bitince **Pasifleştir**: link ana sayfaya gider, sayılmaz.
 
 ## Paneli okuma
@@ -107,14 +121,14 @@ Ham referer alan adı ayrıca `events.referer`'da durur.
 
 | Link | Kaynak |
 |---|---|
-| `https://isailetisim.com/ig` | Instagram |
-| `https://isailetisim.com/tt` | TikTok |
-| `https://isailetisim.com/fb` | Facebook |
-| `https://isailetisim.com/x` | X |
-| `https://isailetisim.com/yt` | YouTube |
-| `https://isailetisim.com/ln` | LinkedIn |
-| `https://isailetisim.com/wa` | WhatsApp |
-| `https://isailetisim.com/tg` | Telegram |
+| `https://yasomi.net/ig` | Instagram |
+| `https://yasomi.net/tt` | TikTok |
+| `https://yasomi.net/fb` | Facebook |
+| `https://yasomi.net/x` | X |
+| `https://yasomi.net/yt` | YouTube |
+| `https://yasomi.net/ln` | LinkedIn |
+| `https://yasomi.net/wa` | WhatsApp |
+| `https://yasomi.net/tg` | Telegram |
 
 Bu kodlar (ve `admin`, `api`, `assets`, `i`) influencer kodu olarak verilemez.
 
@@ -146,7 +160,7 @@ satın alırsa bağ kopar. Sayılar alt sınır olarak okunmalı.
 
 ## Ticimax satın alma bildirimi
 
-Uç nokta: `POST https://isailetisim.com/api/purchase`, başlık `X-Postback-Key: <PURCHASE_KEY>`, gövde JSON
+Uç nokta: `POST https://yasomi.net/api/purchase` (eski `https://isailetisim.com/api/purchase` da çalışır), başlık `X-Postback-Key: <PURCHASE_KEY>`, gövde JSON
 `{ref, order_id, amount, currency:'TRY', source:'site', note}`. Aynı `order_id` + kaynak ikinci kez gelirse yok sayılır.
 
 İki betik var. `PURCHASE_KEY_DEGERI` yerine kendi anahtarını yaz.
@@ -193,7 +207,7 @@ window.addEventListener('load', function () {
       if (localStorage.getItem(k)) return;
       localStorage.setItem(k, '1');
 
-      fetch('https://isailetisim.com/api/purchase', {
+      fetch('https://yasomi.net/api/purchase', {
         method: 'POST',
         keepalive: true,
         headers: {
@@ -224,7 +238,7 @@ Doğrulanmamış iki nokta:
 
 Elle test:
 ```
-curl -X POST https://isailetisim.com/api/purchase \
+curl -X POST https://yasomi.net/api/purchase \
   -H 'Content-Type: application/json' -H 'X-Postback-Key: <anahtar>' \
   -d '{"ref":"ayse-kaya","order_id":"TEST-1","amount":5999,"currency":"TRY","source":"site","note":"test"}'
 ```

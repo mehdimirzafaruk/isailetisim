@@ -4,11 +4,19 @@ compatibility_date = "2026-10-01"
 workers_dev = true
 preview_urls = false
 
-# Canlıya alırken (isailetisim.com zone'u Cloudflare hesabında olmalı) bu satırı aç:
+# 28 Ekim 2026: kanonik alan adı yasomi.net. isailetisim.com (ve www) /api/* dışında yasomi.net'e 301 verir
+# (src/index.js); /api/* iki alan adında da çalışır (canlı Ticimax postback'i eski adresi kullanıyor).
+# Sıra önemli: `wrangler dev` ilk route'u yerel origin sayar; isailetisim.com ilk olursa yerelde her şey 301 olur.
 routes = [
+  { pattern = "yasomi.net", custom_domain = true },
+  { pattern = "www.yasomi.net", custom_domain = true },
   { pattern = "isailetisim.com", custom_domain = true },
   { pattern = "www.isailetisim.com", custom_domain = true }
 ]
+
+[vars]
+# Panelde, Ticimax betiğinde, kanal/influencer linklerinde gösterilen adres. Sonda / yok.
+SITE_ORIGIN = "https://yasomi.net"
 
 [assets]
 directory = "../"
