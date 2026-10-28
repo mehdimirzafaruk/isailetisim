@@ -37,7 +37,7 @@ export default {
       if (p === '/admin' || p.startsWith('/admin/')) return handleAdmin(request, env, ctx, url);
 
       // 4) Kanal kısa linkleri: /ig -> /?s=ig (bio'lara yapıştırılır)
-      const cm = p.match(/^\/([a-z]{1,2})\/?$/i);
+      const cm = p.match(/^\/([a-z]{1,12})\/?$/i);
       if (cm && (request.method === 'GET' || request.method === 'HEAD')) {
         const r = track.channelRedirect(cm[1].toLowerCase());
         if (r) return r;

@@ -441,7 +441,7 @@ async function settingsPage(request, env, url) {
   -H 'Content-Type: application/json' \\
   -H 'X-Postback-Key: PURCHASE_KEY_DEGERI' \\
   -d '{"ref":"ayse-kaya","order_id":"100234","amount":5999,"currency":"TRY","source":"site","note":"test"}'`;
-  const chan = Object.entries(CHANNELS).map(([short, src]) => {
+  const chan = Object.entries(CHANNELS).filter(([k]) => k.length > 2 || k === 'x').map(([short, src]) => {
     const l = `${origin}/${short}`;
     return html`<div class="linkbox"><b>${trafficLabel(src)}</b><code>${l.replace(/^https?:\/\//, '')}</code><button class="btn sm" type="button" data-copy="${l}">Kopyala</button></div>`;
   });

@@ -79,6 +79,8 @@ export const CODE_RE = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
 /** Bio'ya yapıştırılan kanal kısa linkleri: /ig -> /?s=ig (sources.js etiketleri buradan okur) */
 export const CHANNELS = {
   ig: 'instagram', tt: 'tiktok', fb: 'facebook', x: 'x', yt: 'youtube', ln: 'linkedin', wa: 'whatsapp', tg: 'telegram',
+  // Tam adlı biçimler (bio'da okunaklı): /instagram, /facebook, /tiktok, /youtube, /twitter, /linkedin, /whatsapp, /telegram
+  instagram: 'instagram', tiktok: 'tiktok', facebook: 'facebook', twitter: 'x', youtube: 'youtube', linkedin: 'linkedin', whatsapp: 'whatsapp', telegram: 'telegram',
 };
 export const RESERVED_CODES = new Set(['admin', 'api', 'i', 'assets', 'index', 'robots', 'sitemap', 'favicon', 'cname', 'static', 'worker', ...Object.keys(CHANNELS)]);
 
