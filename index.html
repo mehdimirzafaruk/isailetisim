@@ -52,6 +52,7 @@
 }
 </script>
 
+<script>document.documentElement.className+=" js"</script>
 <style>
 /* Montserrat yüklenene kadar metrikleri eşlenmiş yedek font: yazı yer değiştirmesin */
 @font-face{font-family:"Montserrat Fallback";src:local("Arial"),local("Helvetica");size-adjust:112.8%;ascent-override:85.8%;descent-override:22.3%;line-gap-override:0%}
@@ -158,6 +159,46 @@ a{color:inherit}
 .store-fact{display:block;margin-top:2px;font-size:13px;color:var(--muted);line-height:1.35}
 .chev{flex:none;width:20px;height:20px;color:#9AA6AE;transition:transform .18s ease,color .18s ease}
 .store:hover .chev{transform:translateX(3px);color:var(--blue-dark)}
+
+/* Fiyat karşılaştırma kartı: mağaza değil, yardımcı; açık mavi zemin + hap buton */
+.best{
+  display:flex;align-items:center;gap:12px;min-height:80px;margin-bottom:12px;padding:14px 12px 14px 12px;
+  background:#EEF9FC;border:1px solid rgba(38,176,222,.4);border-radius:var(--r-card);
+  text-decoration:none;color:var(--text);
+  transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.best:hover{border-color:var(--blue);box-shadow:0 8px 22px -10px rgba(21,122,155,.4);transform:translateY(-1px)}
+.best:active{transform:scale(.99)}
+.best-title{display:block;font-size:15.5px;font-weight:700;line-height:1.25;color:var(--blue-darker)}
+.best-sub{display:block;margin-top:3px;font-size:12.5px;color:var(--muted);line-height:1.35}
+.pill{
+  flex:none;display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:999px;
+  background:var(--blue-dark);color:#fff;font-size:12.5px;font-weight:700;white-space:nowrap;
+  transition:background-color .18s ease;
+}
+.best:hover .pill{background:var(--blue-darker)}
+.best-title,.best-sub{text-wrap:balance}
+@media (max-width:479px){
+  .best{gap:10px;padding:12px 10px}
+  .best .badge{width:64px;padding:6px 5px}
+  .best-title{font-size:15px}
+  .best-sub{font-size:12px}
+  .pill{height:30px;padding:0 10px;font-size:12px}
+}
+
+/* Diğer mağazalar: JS varsa kapalı başlar (html.js ilk çizimden önce eklenir, kayma olmaz) */
+.stores-more{margin-top:10px}
+.js .stores-more:not(.open){display:none}
+.more-btn{display:none}
+.js .more-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:48px;margin-top:12px;padding:0 16px;
+  font:inherit;font-size:14.5px;font-weight:600;color:var(--blue-dark);cursor:pointer;
+  background:rgba(255,255,255,.7);border:1px solid var(--line);border-radius:999px;
+  transition:border-color .18s ease,background-color .18s ease;
+}
+.more-btn svg{width:18px;height:18px;flex:none;transition:transform .2s ease}
+.more-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
+.more-btn:hover{border-color:rgba(38,176,222,.55);background:#fff}
 
 /* ---------- Best sellers ---------- */
 .products{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -307,46 +348,104 @@ a{color:inherit}
   <section class="section" aria-labelledby="h-stores">
     <div class="section-head">
       <h2 id="h-stores">Nereden almak istersin?</h2>
-      <p class="section-sub">Hangi uygulamayı kullanıyorsan oradan al, hepsi resmi Yasomi mağazası.</p>
+      <p class="section-sub">11 pazar yerinde resmi Yasomi mağazası. Hangi uygulamayı kullanıyorsan oradan al.</p>
     </div>
+
+    <!-- Fiyat karşılaştırma: mağaza değil, yardımcı kart -->
+    <a class="best" data-t="akakce" href="https://www.akakce.com/arama/?q=yasomi" target="_blank" rel="noopener">
+      <span class="badge" aria-hidden="true"><img src="assets/logo-akakce.png" width="58" height="14" alt="Akakçe" decoding="async"></span>
+      <span class="store-text"><span class="best-title">En avantajlı fiyatı bul</span><span class="best-sub">Akakçe'de tüm mağazalardaki Yasomi fiyatlarını karşılaştır</span></span>
+      <span class="pill">Karşılaştır</span>
+    </a>
+
+    <!-- Sıra = Yasomi satış hacmi (Trendyol ve Hepsiburada sabit en üstte) -->
     <ul class="stores">
 
-      <!-- Trendyol -->
+      <!-- 1. Trendyol -->
       <li><a class="store" data-t="trendyol" href="https://www.trendyol.com/magaza/yasomi-m-109844" target="_blank" rel="noopener">
         <span class="badge" aria-hidden="true"><img src="assets/logo-trendyol.svg" width="58" height="30" alt="Trendyol" decoding="async"></span>
         <span class="store-text"><span class="store-name">Trendyol</span><span class="store-fact">308B takipçi · 9,1 satıcı puanı</span></span>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
       </a></li>
 
-      <!-- Hepsiburada -->
+      <!-- 2. Hepsiburada -->
       <li><a class="store" data-t="hepsiburada" href="https://www.hepsiburada.com/magaza/yasomi" target="_blank" rel="noopener">
         <span class="badge" aria-hidden="true"><img src="assets/logo-hepsiburada.svg" width="58" height="30" alt="Hepsiburada" decoding="async"></span>
         <span class="store-text"><span class="store-name">Hepsiburada</span><span class="store-fact">94B takipçi · 9,5 satıcı puanı</span></span>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
       </a></li>
 
-      <!-- Amazon -->
-      <li><a class="store" data-t="amazon" href="https://www.amazon.com.tr/stores/Yasomi/page/674593C8-59FC-4DE6-8D75-6BC5E7D6D909" target="_blank" rel="noopener">
-        <span class="badge" aria-hidden="true"><img src="assets/logo-amazon.svg" width="58" height="30" alt="Amazon" decoding="async"></span>
-        <span class="store-text"><span class="store-name">Amazon</span><span class="store-fact">Resmi Yasomi Store</span></span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-      </a></li>
-
-      <!-- Pazarama -->
-      <li><a class="store" data-t="pazarama" href="https://www.pazarama.com/magaza/yasomi" target="_blank" rel="noopener">
-        <span class="badge" aria-hidden="true"><img src="assets/logo-pazarama.svg" width="58" height="30" alt="Pazarama" decoding="async"></span>
-        <span class="store-text"><span class="store-name">Pazarama</span><span class="store-fact">Resmi Yasomi mağazası</span></span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-      </a></li>
-
-      <!-- Temu -->
+      <!-- 3. Temu -->
       <li><a class="store" data-t="temu" href="https://www.temu.com/tr/search_result.html?search_key=yasomi" target="_blank" rel="noopener">
         <span class="badge" aria-hidden="true"><img src="assets/logo-temu.svg" width="58" height="30" alt="Temu" decoding="async"></span>
         <span class="store-text"><span class="store-name">Temu</span><span class="store-fact">Yasomi ürünleri Temu'da</span></span>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
       </a></li>
 
+      <!-- 4. MediaMarkt -->
+      <li><a class="store" data-t="mediamarkt" href="https://www.mediamarkt.com.tr/tr/search.html?query=yasomi" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true"><img src="assets/logo-mediamarkt.svg" width="58" height="30" alt="MediaMarkt" decoding="async"></span>
+        <span class="store-text"><span class="store-name">MediaMarkt</span><span class="store-fact">Yasomi ürünleri MediaMarkt'ta</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a></li>
+
+      <!-- 5. PttAVM -->
+      <li><a class="store" data-t="pttavm" href="https://www.pttavm.com/magaza/yasomievaletleri" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true"><img src="assets/logo-pttavm.svg" width="58" height="30" alt="PttAVM" decoding="async"></span>
+        <span class="store-text"><span class="store-name">PttAVM</span><span class="store-fact">Resmi Yasomi mağazası</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a></li>
+
     </ul>
+    <ul class="stores stores-more" id="stores-more">
+
+      <!-- 6. n11 -->
+      <li><a class="store" data-t="n11" href="https://www.n11.com/magaza/yasomi" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true"><img src="assets/logo-n11.svg" width="58" height="30" alt="n11" decoding="async"></span>
+        <span class="store-text"><span class="store-name">n11</span><span class="store-fact">10,0 Başarılı Mağaza</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a></li>
+
+      <!-- 7. Pazarama -->
+      <li><a class="store" data-t="pazarama" href="https://www.pazarama.com/magaza/yasomi" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true"><img src="assets/logo-pazarama.svg" width="58" height="30" alt="Pazarama" decoding="async"></span>
+        <span class="store-text"><span class="store-name">Pazarama</span><span class="store-fact">Resmi Yasomi mağazası</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a></li>
+
+      <!-- 8. Amazon -->
+      <li><a class="store" data-t="amazon" href="https://www.amazon.com.tr/stores/Yasomi/page/674593C8-59FC-4DE6-8D75-6BC5E7D6D909" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true"><img src="assets/logo-amazon.svg" width="58" height="30" alt="Amazon" decoding="async"></span>
+        <span class="store-text"><span class="store-name">Amazon</span><span class="store-fact">Resmi Yasomi Store</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a></li>
+
+      <!-- 9. Teknosa -->
+      <li><a class="store" data-t="teknosa" href="https://www.teknosa.com/arama/?s=yasomi" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true"><img src="assets/logo-teknosa.svg" width="58" height="30" alt="Teknosa" decoding="async"></span>
+        <span class="store-text"><span class="store-name">Teknosa</span><span class="store-fact">Yasomi ürünleri Teknosa'da</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a></li>
+
+      <!-- 10. İdefix -->
+      <li><a class="store" data-t="idefix" href="https://www.idefix.com/arama?q=yasomi" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true"><img src="assets/logo-idefix.svg" width="58" height="30" alt="İdefix" decoding="async"></span>
+        <span class="store-text"><span class="store-name">İdefix</span><span class="store-fact">Yasomi ürünleri İdefix'te</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a></li>
+
+      <!-- 11. Çiçeksepeti -->
+      <li><a class="store" data-t="ciceksepeti" href="https://www.ciceksepeti.com/arama?query=yasomi" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true"><img src="assets/logo-ciceksepeti.png" width="58" height="30" alt="Çiçeksepeti" decoding="async"></span>
+        <span class="store-text"><span class="store-name">Çiçeksepeti</span><span class="store-fact">Yasomi ürünleri Çiçeksepeti'nde</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a></li>
+
+    </ul>
+    <button class="more-btn" type="button" aria-expanded="false" aria-controls="stores-more">
+      <span class="more-label">Diğer 6 mağazayı göster</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
   </section>
 
   <!-- ===== 4. Çok satanlar ===== -->
@@ -514,6 +613,19 @@ w.__ttqLoad=function(){ttq.load('D1AG6V3C77UC7904J7N0');ttq.page();};
     try{ if(typeof fbq==='function')fbq('trackCustom','BioClick',{target:t}); }catch(_){}
     try{ if(typeof ttq!=='undefined')ttq.track('ClickButton',{content_name:t}); }catch(_){}
   },{capture:true,passive:true});
+
+  // Diğer 6 mağaza: aç/kapa
+  var moreBtn=document.querySelector('.more-btn'),more=document.getElementById('stores-more');
+  if(moreBtn&&more){
+    var label=moreBtn.querySelector('.more-label'),closedText=label.textContent;
+    moreBtn.addEventListener('click',function(){
+      var open=moreBtn.getAttribute('aria-expanded')!=='true';
+      moreBtn.setAttribute('aria-expanded',String(open));
+      more.classList.toggle('open',open);
+      label.textContent=open?'Daha az göster':closedText;
+      if(!open&&moreBtn.getBoundingClientRect().top<0)moreBtn.scrollIntoView({block:'center'});
+    });
+  }
 
   // Yorum satırı (mobil): kaydırdıkça noktalardan aktif kartı göster
   var row=document.querySelector('.reviews'),dots=document.querySelectorAll('.review-dots span');
