@@ -5,7 +5,7 @@ export { CHANNELS };
 
 export const TRAFFIC_LABELS = {
   instagram: 'Instagram', tiktok: 'TikTok', facebook: 'Facebook', x: 'X', youtube: 'YouTube', linkedin: 'LinkedIn',
-  whatsapp: 'WhatsApp', telegram: 'Telegram', google: 'Google', direkt: 'Direkt', influencer: 'Influencer linkleri',
+  whatsapp: 'WhatsApp', telegram: 'Telegram', pinterest: 'Pinterest', threads: 'Threads', google: 'Google', direkt: 'Direkt', influencer: 'Influencer linkleri',
   web: 'Diğer web', '?': 'Eşleşmeyen tıklama',
 };
 
@@ -29,6 +29,8 @@ const HOST_RULES = [
   [/(^|\.)google\.[a-z]{2,3}(\.[a-z]{2})?$/, 'google'],
   [/(^|\.)(whatsapp\.com|wa\.me)$/, 'whatsapp'],
   [/(^|\.)(t\.me|telegram\.org|telegram\.me)$/, 'telegram'],
+  [/(^|\.)(pinterest\.[a-z.]+|pin\.it)$/, 'pinterest'],
+  [/(^|\.)(threads\.net|threads\.com)$/, 'threads'],
 ];
 // Android uygulama referer'ı: android-app://com.instagram.android/
 const ANDROID_APPS = {
