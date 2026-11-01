@@ -8,6 +8,7 @@ import { layout, page } from '../src/html.js';
 import { buildLocation } from '../src/track.js';
 import { detectSource, sourceFromTag, sourceFromReferer, trafficLabel } from '../src/sources.js';
 import { ticimaxSnippets } from '../src/snippets.js';
+import { handleMedia, parseRange, signMedia, verifyMediaSig, MEDIA_TTL_S } from '../src/media.js';
 
 let n = 0;
 const t = async (name, fn) => { await fn(); n++; };
@@ -266,5 +267,69 @@ await t('panel: CSP + nonce', async () => {
   const n = csp.match(/'nonce-([^']+)'/)[1];
   assert.ok((await r.text()).includes(`<script nonce="${n}">1</script>`));
   assert.ok(csp.includes("frame-ancestors 'none'") && csp.includes("form-action 'self'"));
+});
+// --- /m/* yayın medyası (sahte R2 ile) ---
+function fakeBucket() {
+  const store = new Map();
+  return {
+    store,
+    async put(k, v, o) { store.set(k, { data: new Uint8Array(v), meta: o }); },
+    async head(k) { const o = store.get(k); return o ? { size: o.data.length, httpEtag: '"e"' } : null; },
+    async get(k, opt) {
+      const o = store.get(k); if (!o) return null;
+      const r = opt && opt.range; const d = r ? o.data.slice(r.offset, r.offset + r.length) : o.data;
+      return { body: d, size: o.data.length };
+    },
+    async delete(k) { store.delete(k); },
+  };
+}
+const hexOf = async (b) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', b))].map((x) => x.toString(16).padStart(2, '0')).join('');
+await t('media: parseRange', () => {
+  assert.equal(parseRange(null, 10), null);
+  assert.deepEqual(parseRange('bytes=0-3', 10), { offset: 0, length: 4 });
+  assert.deepEqual(parseRange('bytes=5-', 10), { offset: 5, length: 5 });
+  assert.deepEqual(parseRange('bytes=-3', 10), { offset: 7, length: 3 });
+  assert.deepEqual(parseRange('bytes=8-100', 10), { offset: 8, length: 2 });
+  assert.equal(parseRange('bytes=10-', 10), 'invalid');
+  assert.equal(parseRange('bytes=a-b', 10), 'invalid');
+});
+await t('media: imza süresi', async () => {
+  const now = 1_800_000_000;
+  const sig = await signMedia('k', 'a'.repeat(64), now + 100);
+  assert.ok(await verifyMediaSig('k', 'a'.repeat(64), String(now + 100), sig, now));
+  assert.ok(!(await verifyMediaSig('k', 'a'.repeat(64), String(now + 100), sig, now + 101)), 'süresi dolan');
+  assert.ok(!(await verifyMediaSig('k2', 'a'.repeat(64), String(now + 100), sig, now)), 'yanlış anahtar');
+  assert.ok(!(await verifyMediaSig('k', 'b'.repeat(64), String(now + 100), sig, now)), 'başka dosya');
+  const far = now + MEDIA_TTL_S * 3;
+  assert.ok(!(await verifyMediaSig('k', 'a'.repeat(64), String(far), await signMedia('k', 'a'.repeat(64), far), now)), '24 saatten uzun');
+});
+await t('media: yükle / imzalı GET / Range / sil', async () => {
+  const env = { PUBLISH_MEDIA: fakeBucket(), MEDIA_UPLOAD_SECRET: 'gizli' };
+  const body = new TextEncoder().encode('0123456789');
+  const sha = await hexOf(body);
+  const call = (method, path, init = {}) => handleMedia(new Request('https://yasomi.net' + path, { method, ...init }), env, new URL('https://yasomi.net' + path));
+  assert.equal((await call('PUT', `/m/upload/${sha}.mp4`, { body })).status, 401);
+  assert.equal((await call('PUT', `/m/upload/${'0'.repeat(64)}.mp4`, { body, headers: { authorization: 'Bearer gizli' } })).status, 422);
+  const r = await call('PUT', `/m/upload/${sha}.mp4`, { body, headers: { authorization: 'Bearer gizli' } });
+  assert.equal(r.status, 201);
+  const j = await r.json();
+  assert.equal(j.sha256, sha);
+  const u = new URL(j.url);
+  assert.equal(u.origin, 'https://yasomi.net');
+  const g = await call('GET', u.pathname + u.search);
+  assert.equal(g.status, 200);
+  assert.equal(g.headers.get('content-type'), 'video/mp4');
+  assert.equal(await g.text(), '0123456789');
+  const rg = await call('GET', u.pathname + u.search, { headers: { range: 'bytes=2-4' } });
+  assert.equal(rg.status, 206);
+  assert.equal(rg.headers.get('content-range'), 'bytes 2-4/10');
+  assert.equal(await rg.text(), '234');
+  assert.equal((await call('HEAD', u.pathname + u.search)).headers.get('content-length'), '10');
+  assert.equal((await call('GET', u.pathname)).status, 403, 'imzasız');
+  assert.equal((await call('GET', u.pathname + `?exp=${j.expires}&sig=${'0'.repeat(64)}`)).status, 403);
+  assert.equal((await call('DELETE', u.pathname)).status, 401);
+  assert.equal((await call('DELETE', u.pathname, { headers: { authorization: 'Bearer gizli' } })).status, 204);
+  assert.equal((await call('GET', u.pathname + u.search)).status, 404);
+  assert.equal((await handleMedia(new Request('https://yasomi.net/m/x'), {}, new URL('https://yasomi.net/m/x'))).status, 503, 'bağlantı yoksa 503');
 });
 console.log(`unit: ${n} test grubu geçti`);

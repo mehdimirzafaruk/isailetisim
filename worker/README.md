@@ -333,3 +333,16 @@ npm test                                # saf mantık testleri (Cloudflare gerek
 bash test/e2e.sh                        # dev sunucusu açıkken uçtan uca test (yerel veritabanını sıfırlar)
 npx wrangler d1 execute isailetisim --local --file test/seed.sql   # yerel örnek veri: 2 influencer, ~300 olay, 20 gün
 ```
+
+## Yayın medyası (/m/*, R2)
+
+Sosyal medya otomatik yayını (Hermes sunucusu, `publish_worker.py`) Instagram/TikTok için herkese açık HTTPS video linki ister.
+`src/media.js`: `PUT /m/upload/<sha256>.mp4` (Bearer `MEDIA_UPLOAD_SECRET`, gövdenin sha256'sı doğrulanır) → 24 saatlik imzalı
+`GET /m/<sha256>.mp4?exp=&sig=` (Range destekli, `video/mp4`) → yayından sonra `DELETE`. Bağlantı yokken `/m/*` 503 döner.
+
+Açmak için (bir kez):
+1. Cloudflare panel → R2 Object Storage → R2'yi etkinleştir (ücretsiz katman; kart ister).
+2. `npx wrangler r2 bucket create yasomi-publish-media`
+3. `npx wrangler secret put MEDIA_UPLOAD_SECRET` (aynı değer sunucuda `publish-secrets.json` → `media_host.upload_secret`)
+4. `wrangler.toml` içindeki `[[r2_buckets]]` satırlarının yorumunu kaldır → `npm test` → `npx wrangler deploy`
+5. İsteğe bağlı temizlik kuralı: `npx wrangler r2 bucket lifecycle add yasomi-publish-media publish-2d publish/ --expire-days 2`

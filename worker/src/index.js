@@ -1,6 +1,7 @@
 // yasomi.net Worker (eski adı isailetisim.com): statik bio sitesi (Workers static assets) + influencer takibi + /admin paneli.
 import * as track from './track.js';
 import { handleAdmin } from './admin.js';
+import { handleMedia } from './media.js';
 import { getInfluencer } from './db.js';
 import { isValidCode, json, siteOrigin, LEGACY_HOSTS } from './util.js';
 
@@ -19,6 +20,9 @@ export default {
       return Response.redirect(url.toString(), 301);
     }
     try {
+      // 0) Yayın medyası: imzalı, süreli video linkleri (src/media.js)
+      if (p.startsWith('/m/')) return handleMedia(request, env, url);
+
       // 1) Influencer linki (kanonik biçim)
       const im = p.match(/^\/i\/([^/]+)\/?$/);
       if (im && (request.method === 'GET' || request.method === 'HEAD')) {

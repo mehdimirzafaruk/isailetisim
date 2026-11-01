@@ -31,5 +31,13 @@ database_name = "isailetisim"
 database_id = "34634dba-971a-4bd6-b870-64fb05e4ba14"
 migrations_dir = "migrations"
 
+# Sosyal yayın medyası (src/media.js, /m/*). R2 hesapta etkinleştirilip bucket oluşturulunca açılır:
+#   npx wrangler r2 bucket create yasomi-publish-media
+#   npx wrangler secret put MEDIA_UPLOAD_SECRET      (aynı değer sunucuda publish-secrets.json media_host.upload_secret)
+# Sonra aşağıdaki üç satırın yorumunu kaldırıp deploy. Bağlantı yokken /m/* 503 döner, sitenin geri kalanı etkilenmez.
+# [[r2_buckets]]
+# binding = "PUBLISH_MEDIA"
+# bucket_name = "yasomi-publish-media"
+
 [observability]
 enabled = true
