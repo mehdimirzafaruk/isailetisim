@@ -5,6 +5,9 @@ import { handleMedia } from './media.js';
 import { getInfluencer } from './db.js';
 import { isValidCode, json, siteOrigin, LEGACY_HOSTS } from './util.js';
 
+// Google İşletme Profili "Yasomi" (place id, 4 Kasım 2026 arama sonucundan)
+const GOOGLE_REVIEW_URL = 'https://search.google.com/local/writereview?placeid=ChIJXdXp1Ee7yhQRGmL-W6ljOdw';
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -39,6 +42,9 @@ export default {
 
       // 3) Panel
       if (p === '/admin' || p.startsWith('/admin/')) return handleAdmin(request, env, ctx, url);
+
+      // 3b) Yorum kartı QR'ları (paket içi kart): /yorum = statik yorum.html (platform seçimi), /google = Google yorum formu
+      if (p === '/google' || p === '/google/') return Response.redirect(GOOGLE_REVIEW_URL, 302);
 
       // 4) Kanal kısa linkleri: /ig -> /?s=ig (bio'lara yapıştırılır)
       const cm = p.match(/^\/([a-z]{1,12})\/?$/i);

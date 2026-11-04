@@ -82,7 +82,7 @@ export const CHANNELS = {
   // Tam adlı biçimler (bio'da okunaklı): /instagram, /facebook, /tiktok, /youtube, /twitter, /linkedin, /whatsapp, /telegram
   instagram: 'instagram', tiktok: 'tiktok', facebook: 'facebook', twitter: 'x', youtube: 'youtube', linkedin: 'linkedin', whatsapp: 'whatsapp', telegram: 'telegram', pinterest: 'pinterest', threads: 'threads',
 };
-export const RESERVED_CODES = new Set(['admin', 'api', 'i', 'assets', 'index', 'robots', 'sitemap', 'favicon', 'cname', 'static', 'worker', ...Object.keys(CHANNELS)]);
+export const RESERVED_CODES = new Set(['admin', 'api', 'i', 'assets', 'index', 'robots', 'sitemap', 'favicon', 'cname', 'static', 'worker', 'yorum', 'google', ...Object.keys(CHANNELS)]);
 
 export function isValidCode(code) {
   return typeof code === 'string' && CODE_RE.test(code) && !RESERVED_CODES.has(code);
