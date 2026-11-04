@@ -43,6 +43,17 @@ export default {
       // 3) Panel
       if (p === '/admin' || p.startsWith('/admin/')) return handleAdmin(request, env, ctx, url);
 
+      // 3a) TikTok "Yasomi Yayın" uygulaması (4 Kas 2026): URL prefix doğrulama dosyası, politika linkleri, OAuth dönüşü
+      if (p === '/tiktokqKpaJJQc2pFkHkqFq6MRL6i1gu7eZlCF.txt')
+        return new Response('tiktok-developers-site-verification=qKpaJJQc2pFkHkqFq6MRL6i1gu7eZlCF', { headers: { 'content-type': 'text/plain; charset=utf-8' } });
+      if (p === '/gizlilik' || p === '/gizlilik/') return Response.redirect('https://www.yasomi.com.tr/gizlilik', 301);
+      if (p === '/kosullar' || p === '/kosullar/') return Response.redirect('https://www.yasomi.com.tr/uyelik-sozlesmesi', 301);
+      if (p === '/tiktok-callback' || p === '/tiktok-callback/') {
+        const err = url.searchParams.get('error');
+        const msg = err ? 'TikTok bağlantısı tamamlanmadı: ' + err : 'TikTok hesabı Yasomi Yayın uygulamasına bağlandı. Bu sekmeyi kapatabilirsiniz.';
+        return new Response('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Yasomi Yayın</title><body style="font-family:system-ui;margin:40px auto;max-width:520px;color:#222"><h1 style="color:#26B0DE">Yasomi Yayın</h1><p>' + msg.replace(/[<>&]/g, '') + '</p></body>', { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' } });
+      }
+
       // 3b) Yorum kartı QR'ları (paket içi kart): /yorum = statik yorum.html (platform seçimi), /google = Google yorum formu
       if (p === '/google' || p === '/google/') return Response.redirect(GOOGLE_REVIEW_URL, 302);
 
