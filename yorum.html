@@ -36,24 +36,39 @@ h2{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
 .list{display:grid;gap:10px;margin-bottom:26px}
 a.opt{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--line);border-radius:var(--r-card);background:var(--bg);color:inherit;text-decoration:none;transition:border-color .15s,box-shadow .15s}
 a.opt:hover,a.opt:focus-visible{border-color:var(--blue);box-shadow:0 4px 14px -6px rgba(21,122,155,.45);outline:none}
-.opt img,.opt .ic{width:96px;height:32px;object-fit:contain;flex:none}
+.opt img,.opt .ic{width:84px;height:30px;object-fit:contain;flex:none}
 .opt .tx{flex:1;min-width:0}
 .opt b{display:block;font-size:16px}
 .opt small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
 .opt .ar{color:var(--blue);font-size:22px;font-weight:700;flex:none}
 a.google{background:var(--surface)}
 .stars{color:#F5B400;font-size:20px;letter-spacing:1px;display:flex;align-items:center;justify-content:center}
+.stars.big{font-size:30px;letter-spacing:4px;margin:-4px 0 6px}
 .note{background:var(--surface);border-radius:var(--r-card);padding:14px 16px;font-size:14px;color:var(--muted)}
 .note b{color:var(--text)}
 footer{text-align:center;margin-top:28px;font-size:13px;color:var(--muted)}
-footer a{color:var(--blue-dark);font-weight:600;text-decoration:none}
+footer .fh{font-weight:700;color:var(--text);font-size:15px;margin-bottom:12px}
+footer .site{margin-top:14px}
+footer .site a{color:var(--blue-dark);font-weight:600;text-decoration:none}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.socials{list-style:none;margin:0;padding:0;display:flex;justify-content:center;flex-wrap:wrap;gap:clamp(6px,2.4vw,12px)}
+.social{
+  display:flex;align-items:center;justify-content:center;
+  width:clamp(44px,12.6vw,52px);height:clamp(44px,12.6vw,52px);border-radius:50%;
+  background:var(--surface);border:1px solid var(--line);color:var(--text);
+  transition:background-color .18s ease,color .18s ease,border-color .18s ease,transform .18s ease;
+}
+.social svg{width:22px;height:22px}
+.social:hover{background:var(--blue-dark);border-color:var(--blue-dark);color:#fff;transform:translateY(-2px)}
+.social:active{transform:scale(.96)}
 </style>
 </head>
 <body>
 <main>
   <img class="logo" src="assets/yasomi-logo-360.png" srcset="assets/yasomi-logo-360.png 360w, assets/yasomi-logo-720.png 720w" sizes="170px" alt="Yasomi" width="170" height="51">
-  <h1>Deneyiminiz bizim için değerli</h1>
-  <p class="lead">Yasomi'yi tercih ettiğiniz için teşekkür ederiz. Ürünü nereden aldınız?</p>
+  <p class="stars big" aria-hidden="true">★★★★★</p>
+  <h1>Ürününüzü değerlendirir misiniz?</h1>
+  <p class="lead">Yorumunuz 1 dakika sürer ve başka ailelerin doğru ürünü seçmesine yardım eder. Ürünü nereden aldınız?</p>
 
   <h2>Ürünü değerlendirin</h2>
   <div class="list">
@@ -67,9 +82,9 @@ footer a{color:var(--blue-dark);font-weight:600;text-decoration:none}
       <span class="tx"><b>Hepsiburada</b><small>Siparişlerim → ürün → Değerlendir</small></span>
       <span class="ar" aria-hidden="true">›</span>
     </a>
-    <a class="opt" href="https://www.amazon.com.tr/gp/css/order-history" rel="noopener">
-      <img src="assets/logo-amazon.svg" alt="" width="96" height="32">
-      <span class="tx"><b>Amazon</b><small>Siparişlerim → Ürün değerlendirmesi yaz</small></span>
+    <a class="opt" href="https://www.mediamarkt.com.tr/tr/myaccount/orders" rel="noopener">
+      <img src="assets/logo-mediamarkt.svg" alt="" width="96" height="32">
+      <span class="tx"><b>MediaMarkt</b><small>Siparişlerim → ürün → Değerlendir</small></span>
       <span class="ar" aria-hidden="true">›</span>
     </a>
   </div>
@@ -85,7 +100,18 @@ footer a{color:var(--blue-dark);font-weight:600;text-decoration:none}
 
   <p class="note"><b>Bir sorun mu var?</b> Yorum yazmadan önce bize yazın, hemen çözelim: <a href="https://wa.me/905441569272?text=Merhaba%2C%20Yasomi%20%C3%BCr%C3%BCn%C3%BCmle%20ilgili%20yard%C4%B1m%20istiyorum." rel="noopener">WhatsApp</a></p>
 
-  <footer>Instagram &amp; TikTok: <a href="/ig">@yasomievaletleri</a> · <a href="https://www.yasomi.com.tr">yasomi.com.tr</a></footer>
+  <footer>
+    <p class="fh">Bizi takip edin</p>
+    <ul class="socials">
+      <li><a class="social" data-x="instagram" href="https://www.instagram.com/yasomievaletleri/" target="_blank" rel="noopener"><span class="sr-only">Instagram</span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.4" cy="6.6" r="1.25" fill="currentColor"/></svg></a></li>
+      <li><a class="social" data-x="tiktok" href="https://www.tiktok.com/@yasomievaletleri" target="_blank" rel="noopener"><span class="sr-only">TikTok</span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" transform="translate(2.2 2) scale(.82)" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a></li>
+      <li><a class="social" data-x="youtube" href="https://www.youtube.com/@yasomievaletleri" target="_blank" rel="noopener"><span class="sr-only">YouTube</span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M21.6 7.2a2.5 2.5 0 0 0-1.77-1.77C18.27 5 12 5 12 5s-6.27 0-7.83.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.77 1.77C5.73 19 12 19 12 19s6.27 0 7.83-.43a2.5 2.5 0 0 0 1.77-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8ZM10 15V9l5.2 3L10 15Z"/></svg></a></li>
+      <li><a class="social" data-x="facebook" href="https://www.facebook.com/yasomievaletleri" target="_blank" rel="noopener"><span class="sr-only">Facebook</span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 21.5v-8h2.7l.4-3.1h-3.1V8.4c0-.9.25-1.5 1.55-1.5h1.65V4.1a22 22 0 0 0-2.4-.12c-2.4 0-4 1.45-4 4.1v2.32H7.6v3.1h2.7v8h3.2Z"/></svg></a></li>
+      <li><a class="social" data-x="x" href="https://x.com/Yasomiofficial" target="_blank" rel="noopener"><span class="sr-only">X (Twitter)</span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" transform="translate(3 3) scale(.75)" d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a></li>
+      <li><a class="social" data-x="linkedin" href="https://www.linkedin.com/company/yasomi" target="_blank" rel="noopener"><span class="sr-only">LinkedIn</span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" transform="translate(1.6 1.4) scale(.86)" d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45Z"/></svg></a></li>
+    </ul>
+    <p class="site"><a href="https://www.yasomi.com.tr">www.yasomi.com.tr</a></p>
+  </footer>
 </main>
 </body>
 </html>
